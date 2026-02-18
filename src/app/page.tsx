@@ -159,7 +159,7 @@ const I = {
    INTERSECTION OBSERVER — scroll-driven animations
    ═══════════════════════════════════════════════════════════════ */
 
-function useInView(threshold = 0.15) {
+function useInView(threshold = 0.2) {
   const ref = useRef<HTMLElement>(null)
   const [visible, setVisible] = useState(false)
   useEffect(() => {
@@ -167,7 +167,7 @@ function useInView(threshold = 0.15) {
     if (!el) return
     const obs = new IntersectionObserver(
       ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect() } },
-      { threshold }
+      { threshold, rootMargin: "-30px 0px" }
     )
     obs.observe(el)
     return () => obs.disconnect()
@@ -179,18 +179,26 @@ function useInView(threshold = 0.15) {
    ANIMATED HIGHLIGHT — pink sweep that slides in on scroll
    ═══════════════════════════════════════════════════════════════ */
 
-function AnimatedHighlight({ children, className = "" }: { children: React.ReactNode, className?: string }) {
+function AnimatedHighlight({ children, className = "", delay = 0 }: { children: React.ReactNode, className?: string, delay?: number }) {
   const ref = useRef<HTMLSpanElement>(null)
   const [inView, setInView] = useState(false)
   useEffect(() => {
     const el = ref.current
     if (!el) return
     const obs = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) { setInView(true); obs.disconnect() }
-    }, { threshold: 0.1 })
+      if (e.isIntersecting) {
+        // Respect additional delay for cascade coordination
+        if (delay > 0) {
+          setTimeout(() => setInView(true), delay)
+        } else {
+          setInView(true)
+        }
+        obs.disconnect()
+      }
+    }, { threshold: 0.3, rootMargin: "-40px 0px" })
     obs.observe(el)
     return () => obs.disconnect()
-  }, [])
+  }, [delay])
   return (
     <span ref={ref} className={`highlight-pink ${inView ? "animate-in" : ""} ${className}`}>
       {children}
@@ -203,7 +211,7 @@ function AnimatedHighlight({ children, className = "" }: { children: React.React
    Uses JS-driven animation to avoid CSS specificity issues
    ═══════════════════════════════════════════════════════════════ */
 
-function ScribbleOval({ children }: { children: React.ReactNode }) {
+function ScribbleOval({ children, delay = 0 }: { children: React.ReactNode, delay?: number }) {
   const containerRef = useRef<HTMLSpanElement>(null)
   const pathRef = useRef<SVGPathElement>(null)
 
@@ -216,22 +224,29 @@ function ScribbleOval({ children }: { children: React.ReactNode }) {
     const len = path.getTotalLength()
     path.style.strokeDasharray = `${len}`
     path.style.strokeDashoffset = `${len}`
+    path.style.opacity = "0"
 
     const obs = new IntersectionObserver(([e]) => {
       if (e.isIntersecting) {
-        // Use rAF to ensure initial state is painted before animating
-        requestAnimationFrame(() => {
+        // Delay to coordinate with parent section entrance
+        const totalDelay = 400 + delay
+        setTimeout(() => {
+          // Use rAF to ensure initial state is painted before animating
           requestAnimationFrame(() => {
-            path.style.transition = "stroke-dashoffset 1.0s cubic-bezier(0.22, 1, 0.36, 1)"
-            path.style.strokeDashoffset = "0"
+            requestAnimationFrame(() => {
+              // Fade in the stroke first, then draw
+              path.style.transition = "opacity 0.3s ease, stroke-dashoffset 1.8s cubic-bezier(0.33, 1, 0.68, 1)"
+              path.style.opacity = "0.75"
+              path.style.strokeDashoffset = "0"
+            })
           })
-        })
+        }, totalDelay)
         obs.disconnect()
       }
-    }, { threshold: 0.1 })
+    }, { threshold: 0.3, rootMargin: "-40px 0px" })
     obs.observe(container)
     return () => obs.disconnect()
-  }, [])
+  }, [delay])
 
   return (
     <span ref={containerRef} className="circle-accent" style={{ position: "relative", display: "inline-block" }}>
@@ -259,7 +274,7 @@ function ScribbleOval({ children }: { children: React.ReactNode }) {
           strokeWidth="2.5"
           strokeLinecap="round"
           strokeLinejoin="round"
-          opacity="0.75"
+          opacity="0"
         />
       </svg>
     </span>
@@ -291,27 +306,35 @@ function IconDrawWrapper({ children, delay = 0 }: { children: React.ReactNode, d
         const len = stroke.getTotalLength()
         stroke.style.strokeDasharray = `${len}`
         stroke.style.strokeDashoffset = `${len}`
+        stroke.style.opacity = "0"
       } catch {
         // Some elements (e.g. zero-length lines) don't support getTotalLength
         stroke.style.strokeDasharray = "100"
         stroke.style.strokeDashoffset = "100"
+        stroke.style.opacity = "0"
       }
     })
 
     const obs = new IntersectionObserver(([e]) => {
       if (e.isIntersecting) {
-        requestAnimationFrame(() => {
+        // Stagger: 120ms between strokes, with 200ms base delay for smooth cascade
+        const baseDelay = 200 + delay * 1000
+        setTimeout(() => {
           requestAnimationFrame(() => {
-            strokes.forEach((s, i) => {
-              const stroke = s as SVGElement
-              stroke.style.transition = `stroke-dashoffset 0.8s cubic-bezier(0.22, 1, 0.36, 1) ${delay + i * 0.06}s`
-              stroke.style.strokeDashoffset = "0"
+            requestAnimationFrame(() => {
+              strokes.forEach((s, i) => {
+                const stroke = s as SVGElement
+                const stagger = i * 0.12
+                stroke.style.transition = `opacity 0.4s ease ${stagger}s, stroke-dashoffset 1.2s cubic-bezier(0.33, 1, 0.68, 1) ${stagger}s`
+                stroke.style.opacity = "1"
+                stroke.style.strokeDashoffset = "0"
+              })
             })
           })
-        })
+        }, baseDelay)
         obs.disconnect()
       }
-    }, { threshold: 0.1 })
+    }, { threshold: 0.25, rootMargin: "-20px 0px" })
     obs.observe(el)
     return () => obs.disconnect()
   }, [delay])
@@ -437,12 +460,12 @@ function HeroSection() {
         marginBottom: "24px",
         maxWidth: "900px",
         opacity: visible ? 1 : 0,
-        transform: visible ? "translateY(0)" : "translateY(50px)",
-        transition: "all 1s cubic-bezier(0.16, 1, 0.3, 1) 0.15s",
+        transform: visible ? "translateY(0)" : "translateY(40px)",
+        transition: "opacity 1.2s cubic-bezier(0.33, 1, 0.68, 1) 0.1s, transform 1.4s cubic-bezier(0.33, 1, 0.68, 1) 0.1s",
       }}>
         Your clipboard,{" "}
         <br />
-        <AnimatedHighlight className="" >reimagined</AnimatedHighlight>
+        <AnimatedHighlight className="" delay={200}>reimagined</AnimatedHighlight>
       </h1>
 
       {/* Subtitle */}
@@ -451,8 +474,8 @@ function HeroSection() {
         textAlign: "center",
         marginBottom: "40px",
         opacity: visible ? 1 : 0,
-        transform: visible ? "translateY(0)" : "translateY(30px)",
-        transition: "all 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.25s",
+        transform: visible ? "translateY(0)" : "translateY(28px)",
+        transition: "opacity 1.1s cubic-bezier(0.33, 1, 0.68, 1) 0.3s, transform 1.3s cubic-bezier(0.33, 1, 0.68, 1) 0.3s",
         fontSize: "18px",
         lineHeight: 1.6,
       }}>
@@ -466,8 +489,8 @@ function HeroSection() {
       <div style={{
         display: "flex", gap: "16px", flexWrap: "wrap", justifyContent: "center",
         opacity: visible ? 1 : 0,
-        transform: visible ? "translateY(0)" : "translateY(30px)",
-        transition: "all 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.35s",
+        transform: visible ? "translateY(0)" : "translateY(24px)",
+        transition: "opacity 1.0s cubic-bezier(0.33, 1, 0.68, 1) 0.5s, transform 1.2s cubic-bezier(0.33, 1, 0.68, 1) 0.5s",
       }}>
         <a href="https://github.com/Jnani-Smart/Clippy/releases/download/v1.9.0/Clippy.app.zip" className="btn-dark">
           {I.apple(18)}
@@ -485,8 +508,8 @@ function HeroSection() {
         style={{
           marginTop: "72px", width: "100%", maxWidth: "960px",
           opacity: visible ? 1 : 0,
-          transform: visible ? "translateY(0) scale(1)" : "translateY(60px) scale(0.96)",
-          transition: "all 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.55s",
+          transform: visible ? "translateY(0) scale(1)" : "translateY(50px) scale(0.97)",
+          transition: "opacity 1.2s cubic-bezier(0.33, 1, 0.68, 1) 0.7s, transform 1.6s cubic-bezier(0.33, 1, 0.68, 1) 0.7s",
         }}
       >
         <img
@@ -513,18 +536,21 @@ function HeroSection() {
 
 function FeatureItem({ icon, label, accent, visible, index }: { icon: (s?: number) => React.ReactNode, label: string, accent: string | null, visible: boolean, index: number }) {
   const magnetRef = useMagnetic()
+  // Stagger: 100ms between items, with a gentle ease-out for a wave-like entrance
+  const staggerDelay = 0.08 + index * 0.1
   return (
     <div style={{
       opacity: visible ? 1 : 0,
-      transform: visible ? "translateY(0)" : "translateY(32px)",
-      transition: `all 0.8s cubic-bezier(0.16, 1, 0.3, 1) ${0.05 + index * 0.06}s`,
+      transform: visible ? "translateY(0) scale(1)" : "translateY(36px) scale(0.97)",
+      transition: `opacity 0.9s cubic-bezier(0.33, 1, 0.68, 1) ${staggerDelay}s, transform 1.1s cubic-bezier(0.33, 1, 0.68, 1) ${staggerDelay}s`,
       cursor: "default",
+      willChange: "opacity, transform",
     }}>
-      <IconDrawWrapper delay={0.05 + index * 0.06}>
+      <IconDrawWrapper delay={staggerDelay}>
         <div
           ref={magnetRef}
           className="feature-icon"
-          style={{ transition: "transform 0.35s cubic-bezier(0.34,1.56,0.64,1)" }}
+          style={{ transition: "transform 0.5s cubic-bezier(0.34,1.56,0.64,1)" }}
         >
           {icon(44)}
         </div>
@@ -583,14 +609,14 @@ function ShowcaseSection() {
       <div ref={ref1} style={{
         display: "grid", gridTemplateColumns: "1fr 1fr", gap: "48px",
         alignItems: "center", marginBottom: "100px",
-        opacity: v1 ? 1 : 0, transform: v1 ? "translateY(0)" : "translateY(40px)",
-        transition: "all 0.9s cubic-bezier(0.16, 1, 0.3, 1)",
+        opacity: v1 ? 1 : 0, transform: v1 ? "translateY(0)" : "translateY(36px)",
+        transition: "opacity 1.0s cubic-bezier(0.33, 1, 0.68, 1) 0.1s, transform 1.3s cubic-bezier(0.33, 1, 0.68, 1) 0.1s",
       }}>
         <div>
           <p className="text-label" style={{ marginBottom: "16px", color: "var(--accent-blue)" }}>QUICK SEARCH</p>
           <h2 className="text-headline" style={{ marginBottom: "20px" }}>
             Find anything,{" "}
-            <AnimatedHighlight>instantly</AnimatedHighlight>
+            <AnimatedHighlight delay={300}>instantly</AnimatedHighlight>
           </h2>
           <p className="text-body" style={{ marginBottom: "28px" }}>
             Search across your entire clipboard history in milliseconds. Filter by category — text, code, URLs, or images. See which app each item came from.
@@ -646,8 +672,8 @@ function ShowcaseSection() {
       <div ref={ref2} style={{
         display: "grid", gridTemplateColumns: "1fr 1fr", gap: "48px",
         alignItems: "center", marginBottom: "100px",
-        opacity: v2 ? 1 : 0, transform: v2 ? "translateY(0)" : "translateY(40px)",
-        transition: "all 0.9s cubic-bezier(0.16, 1, 0.3, 1)",
+        opacity: v2 ? 1 : 0, transform: v2 ? "translateY(0)" : "translateY(36px)",
+        transition: "opacity 1.0s cubic-bezier(0.33, 1, 0.68, 1) 0.1s, transform 1.3s cubic-bezier(0.33, 1, 0.68, 1) 0.1s",
       }}>
         <TiltCard className="glass-warm" style={{ padding: "32px", minHeight: "320px" }}>
           {/* Pinned items demo */}
@@ -684,7 +710,7 @@ function ShowcaseSection() {
           <p className="text-label" style={{ marginBottom: "16px", color: "var(--accent-lavender)" }}>ORGANIZE</p>
           <h2 className="text-headline" style={{ marginBottom: "20px" }}>
             Pin what{" "}
-            <ScribbleOval>matters</ScribbleOval>
+            <ScribbleOval delay={200}>matters</ScribbleOval>
           </h2>
           <p className="text-body" style={{ marginBottom: "28px" }}>
             Keep frequently used items readily available. API keys, email templates, code blocks — pinned items stay accessible across sessions, always one shortcut away.
@@ -708,14 +734,14 @@ function ShowcaseSection() {
       <div ref={ref3} style={{
         display: "grid", gridTemplateColumns: "1fr 1fr", gap: "48px",
         alignItems: "center",
-        opacity: v3 ? 1 : 0, transform: v3 ? "translateY(0)" : "translateY(40px)",
-        transition: "all 0.9s cubic-bezier(0.16, 1, 0.3, 1)",
+        opacity: v3 ? 1 : 0, transform: v3 ? "translateY(0)" : "translateY(36px)",
+        transition: "opacity 1.0s cubic-bezier(0.33, 1, 0.68, 1) 0.1s, transform 1.3s cubic-bezier(0.33, 1, 0.68, 1) 0.1s",
       }}>
         <div>
           <p className="text-label" style={{ marginBottom: "16px", color: "#C3E88D" }}>PRIVACY</p>
           <h2 className="text-headline" style={{ marginBottom: "20px" }}>
             Your data stays{" "}
-            <AnimatedHighlight>yours</AnimatedHighlight>
+            <AnimatedHighlight delay={300}>yours</AnimatedHighlight>
           </h2>
           <p className="text-body" style={{ marginBottom: "28px" }}>
             Your clipboard data never leaves your device. Zero cloud dependency, zero tracking. Import and export your clipboard history anytime. Minimal CPU and memory footprint.
@@ -832,10 +858,10 @@ function TestimonialsSection() {
       <div style={{
         textAlign: "center", marginBottom: "64px",
         opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(24px)",
-        transition: "all 0.8s cubic-bezier(0.16, 1, 0.3, 1)",
+        transition: "opacity 1.0s cubic-bezier(0.33, 1, 0.68, 1), transform 1.2s cubic-bezier(0.33, 1, 0.68, 1)",
       }}>
         <h2 className="text-headline">
-          Loved by <AnimatedHighlight>professionals</AnimatedHighlight>
+          Loved by <AnimatedHighlight delay={400}>professionals</AnimatedHighlight>
         </h2>
       </div>
 
@@ -933,8 +959,8 @@ function DownloadSection() {
     <section id="download" ref={ref} className="section" style={{ textAlign: "center", paddingBottom: "60px" }}>
       <div style={{
         opacity: visible ? 1 : 0,
-        transform: visible ? "translateY(0)" : "translateY(30px)",
-        transition: "all 0.8s cubic-bezier(0.16, 1, 0.3, 1)",
+        transform: visible ? "translateY(0) scale(1)" : "translateY(24px) scale(0.97)",
+        transition: "opacity 1.0s cubic-bezier(0.33, 1, 0.68, 1) 0.1s, transform 1.3s cubic-bezier(0.33, 1, 0.68, 1) 0.1s",
       }}>
         <a href="https://github.com/Jnani-Smart/Clippy/releases/download/v1.9.0/Clippy.app.zip" className="btn-dark" style={{ padding: "22px 48px", fontSize: "18px" }}>
           {I.apple(20)}

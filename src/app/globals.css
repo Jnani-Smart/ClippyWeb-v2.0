@@ -257,14 +257,20 @@ body {
    HIGHLIGHT & ACCENT DECORATIONS — Apple-style micro-animations
    ═══════════════════════════════════════════════════════════════════ */
 
-/* Highlight sweep keyframes — always plays from start */
+/* Highlight sweep keyframes — smooth two-phase reveal
+   Phase 1: scale in from left (0%–70%)
+   Phase 2: subtle settle with opacity refinement (70%–100%) */
 @keyframes highlightSweep {
-  from {
+  0% {
     transform: scaleX(0);
+    opacity: 0;
   }
-
-  to {
+  8% {
+    opacity: 0.7;
+  }
+  100% {
     transform: scaleX(1);
+    opacity: 0.7;
   }
 }
 
@@ -284,14 +290,17 @@ body {
   background: var(--accent-pink);
   border-radius: 4px;
   z-index: -1;
-  opacity: 0.7;
+  opacity: 0;
   transform-origin: left center;
   transform: scaleX(0);
+  will-change: transform, opacity;
 }
 
-/* When animate-in is toggled, fire the keyframe animation */
+/* When animate-in is toggled, fire the keyframe animation.
+   Duration: 1.4s with a gentle ease-out for a smooth, deliberate sweep.
+   Delay: 0.4s so it plays AFTER the parent text fades in. */
 .highlight-pink.animate-in::after {
-  animation: highlightSweep 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.25s both;
+  animation: highlightSweep 1.4s cubic-bezier(0.33, 1, 0.68, 1) 0.4s both;
 }
 
 /* Hand-drawn scribble oval — SVG draws itself on scroll */
