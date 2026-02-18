@@ -119,12 +119,14 @@ export function LiquidGlassHeader({
     const rightSvgRef = useRef<SVGSVGElement>(null)
     const [ready, setReady] = useState(false)
     const [hovered, setHovered] = useState<number | null>(null)
+    const [pressed, setPressed] = useState<number | string | null>(null)
     const [highlight, setHighlight] = useState<{ x: number; w: number; h: number } | null>(null)
     const [scrolled, setScrolled] = useState(false)
     const [mobileOpen, setMobileOpen] = useState(false)
     const navRef = useRef<HTMLElement>(null)
     const mobileMenuRef = useRef<HTMLDivElement>(null)
     const mobileFilterRef = useRef<SVGSVGElement>(null)
+    const pressStart = useRef<number>(0)
 
     // Shorten version: "v1.9.0" → "v1.9", "1.9.0" → "v1.9"
     const shortVersion = (() => {
@@ -203,15 +205,27 @@ export function LiquidGlassHeader({
                 {/* ══ LEFT GROUP: Logo pill + Title pill ══ */}
                 <div style={{ display: "flex", alignItems: "center", gap: "10px", pointerEvents: "auto" }}>
                     {/* ── LOGO PILL (round) ── */}
-                    <div ref={logoPillRef} style={{
-                        ...pillStyle(scrolled),
-                        width: `${GLASS.height}px`, height: `${GLASS.height}px`,
-                        borderRadius: `${GLASS.height / 2}px`,
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        opacity: 0, flexShrink: 0, cursor: "default", padding: 0,
-                        backdropFilter: `url(#hdr-logo) brightness(1.12) saturate(${c.saturation})`,
-                        WebkitBackdropFilter: `url(#hdr-logo) brightness(1.12) saturate(${c.saturation})`,
-                    }}>
+                    <div ref={logoPillRef}
+                        onPointerDown={() => { setPressed("logo"); pressStart.current = Date.now() }}
+                        onPointerUp={() => {
+                            const duration = Date.now() - pressStart.current
+                            if (duration < 150) setTimeout(() => setPressed(null), 150 - duration)
+                            else setPressed(null)
+                        }}
+                        onPointerCancel={() => setPressed(null)}
+                        onMouseLeave={() => setPressed(null)}
+                        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                        style={{
+                            ...pillStyle(scrolled),
+                            width: `${GLASS.height}px`, height: `${GLASS.height}px`,
+                            borderRadius: `${GLASS.height / 2}px`,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            opacity: ready ? 1 : 0, flexShrink: 0, cursor: "pointer", padding: 0,
+                            backdropFilter: `url(#hdr-logo) brightness(1.12) saturate(${c.saturation})`,
+                            WebkitBackdropFilter: `url(#hdr-logo) brightness(1.12) saturate(${c.saturation})`,
+                            transform: pressed === "logo" ? "scale(0.95)" : "scale(1)",
+                            transition: "transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.65s ease",
+                        }}>
                         {logoSrc ? (
                             <img src={logoSrc} alt={`${title} logo`} draggable={false}
                                 style={{ width: "44px", height: "44px", objectFit: "contain", filter: "drop-shadow(0 2px 8px rgba(28,28,30,0.2))" }} />
@@ -225,13 +239,25 @@ export function LiquidGlassHeader({
                     </div>
 
                     {/* ── TITLE + BADGE PILL ── */}
-                    <div ref={leftRef} style={{
-                        ...pillStyle(scrolled),
-                        display: "flex", alignItems: "center", padding: "0 20px", gap: "10px",
-                        opacity: 0, flexShrink: 0, cursor: "default",
-                        backdropFilter: `url(#hdr-l) brightness(1.12) saturate(${c.saturation})`,
-                        WebkitBackdropFilter: `url(#hdr-l) brightness(1.12) saturate(${c.saturation})`,
-                    }}>
+                    <div ref={leftRef}
+                        onPointerDown={() => { setPressed("title"); pressStart.current = Date.now() }}
+                        onPointerUp={() => {
+                            const duration = Date.now() - pressStart.current
+                            if (duration < 150) setTimeout(() => setPressed(null), 150 - duration)
+                            else setPressed(null)
+                        }}
+                        onPointerCancel={() => setPressed(null)}
+                        onMouseLeave={() => setPressed(null)}
+                        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                        style={{
+                            ...pillStyle(scrolled),
+                            display: "flex", alignItems: "center", padding: "0 20px", gap: "10px",
+                            opacity: ready ? 1 : 0, flexShrink: 0, cursor: "pointer",
+                            backdropFilter: `url(#hdr-l) brightness(1.12) saturate(${c.saturation})`,
+                            WebkitBackdropFilter: `url(#hdr-l) brightness(1.12) saturate(${c.saturation})`,
+                            transform: pressed === "title" ? "scale(0.95)" : "scale(1)",
+                            transition: "transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.65s ease",
+                        }}>
                         <span style={{
                             fontSize: "20px", fontWeight: 700, letterSpacing: "-0.02em",
                             color: "rgba(29,29,31,0.92)", lineHeight: 1, whiteSpace: "nowrap",
@@ -250,7 +276,7 @@ export function LiquidGlassHeader({
                 {/* ══ RIGHT PILL: Nav (desktop) ══ */}
                 <div ref={rightRef} className="header-nav-desktop" style={{
                     ...pillStyle(scrolled),
-                    display: "flex", alignItems: "center", padding: "0 6px",
+                    display: "flex", alignItems: "center", padding: "0 8px",
                     opacity: 0, pointerEvents: "auto", flexShrink: 0,
                     backdropFilter: `url(#hdr-r) brightness(1.12) saturate(${c.saturation})`,
                     WebkitBackdropFilter: `url(#hdr-r) brightness(1.12) saturate(${c.saturation})`,
@@ -270,7 +296,7 @@ export function LiquidGlassHeader({
                             height: highlight ? `${highlight.h}px` : "0px",
                             transform: highlight ? `translateX(${highlight.x}px)` : "translateX(0)",
                             background: "rgba(0,0,0,0.055)",
-                            borderRadius: `${GLASS.radius - 4}px`,
+                            borderRadius: "22px",
                             transition: hovered !== null
                                 ? "transform 0.32s cubic-bezier(.4,0,.2,1), width 0.32s cubic-bezier(.4,0,.2,1), height 0.32s cubic-bezier(.4,0,.2,1), opacity 0.2s ease"
                                 : "opacity 0.2s ease",
@@ -278,36 +304,62 @@ export function LiquidGlassHeader({
                             pointerEvents: "none",
                             zIndex: 0,
                         }} />
-                        {sections.map((s, i) => (
-                            <a key={i} href={s.href || "#"}
-                                onMouseEnter={(e) => {
-                                    setHovered(i)
-                                    const el = e.currentTarget
-                                    const nav = navRef.current
-                                    if (nav) {
-                                        const navRect = nav.getBoundingClientRect()
-                                        const elRect = el.getBoundingClientRect()
-                                        setHighlight({
-                                            x: elRect.left - navRect.left,
-                                            w: elRect.width,
-                                            h: elRect.height,
-                                        })
-                                    }
-                                }}
-                                style={{
-                                    fontSize: "15px", fontWeight: 600, letterSpacing: "-0.01em",
-                                    color: hovered === i ? "rgba(29,29,31,0.95)" : "rgba(29,29,31,0.6)",
-                                    fontFamily: '-apple-system, "SF Pro Display", "Helvetica Neue", sans-serif',
-                                    textDecoration: "none", padding: "10px 20px",
-                                    borderRadius: `${GLASS.radius - 4}px`,
-                                    background: "transparent",
-                                    transition: "color 0.22s ease",
-                                    cursor: "pointer", whiteSpace: "nowrap", lineHeight: 1,
-                                    position: "relative", zIndex: 1,
-                                }}>
-                                {s.label}
-                            </a>
-                        ))}
+                        {sections.map((s, i) => {
+                            const isDownload = s.label === "Download";
+                            return (
+                                <a key={i} href={s.href || "#"}
+                                    className={isDownload ? "nav-download-btn" : ""}
+                                    onMouseEnter={(e) => {
+                                        setHovered(i)
+                                        if (isDownload) {
+                                            setHighlight(null)
+                                            return
+                                        }
+                                        const el = e.currentTarget
+                                        const nav = navRef.current
+                                        if (nav) {
+                                            const navRect = nav.getBoundingClientRect()
+                                            const elRect = el.getBoundingClientRect()
+                                            setHighlight({
+                                                x: elRect.left - navRect.left,
+                                                w: elRect.width,
+                                                h: elRect.height,
+                                            })
+                                        }
+                                    }}
+                                    onPointerDown={() => {
+                                        setPressed(i)
+                                        pressStart.current = Date.now()
+                                    }}
+                                    onPointerUp={() => {
+                                        const duration = Date.now() - pressStart.current
+                                        if (duration < 150) {
+                                            setTimeout(() => setPressed(null), 150 - duration)
+                                        } else {
+                                            setPressed(null)
+                                        }
+                                    }}
+                                    onPointerCancel={() => setPressed(null)}
+                                    onMouseLeave={() => setPressed(null)}
+                                    style={{
+                                        fontSize: "15px", fontWeight: 600, letterSpacing: "-0.01em",
+                                        color: isDownload ? "#ffffff" : (hovered === i ? "rgba(29,29,31,0.95)" : "rgba(29,29,31,0.6)"),
+                                        fontFamily: '-apple-system, "SF Pro Display", "Helvetica Neue", sans-serif',
+                                        textDecoration: "none", padding: "14.5px 24px",
+                                        borderRadius: "22px",
+                                        background: isDownload ? "#1C1C1E" : "transparent",
+                                        transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
+                                        transform: pressed === i
+                                            ? "scale(0.95)"
+                                            : (isDownload && hovered === i ? "scale(1.04)" : "scale(1)"),
+                                        cursor: "pointer", whiteSpace: "nowrap", lineHeight: 1,
+                                        position: "relative", zIndex: 1,
+                                        boxShadow: isDownload && (hovered === i && pressed !== i) ? "0 8px 16px -4px rgba(0,0,0,0.2)" : "none",
+                                    }}>
+                                    {s.label}
+                                </a>
+                            )
+                        })}
                     </nav>
                     <Specular />
                     <GlassFilter id="hdr-r" svgRef={rightSvgRef} />

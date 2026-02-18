@@ -480,95 +480,28 @@ function HeroSection() {
       </div>
 
       {/* PRODUCT MOCKUP — Large app screenshot */}
-      <div style={{
-        marginTop: "72px", width: "100%", maxWidth: "960px",
-        opacity: visible ? 1 : 0,
-        transform: visible ? "translateY(0) scale(1)" : "translateY(60px) scale(0.96)",
-        transition: "all 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.55s",
-      }}>
-        <TiltCard className="mockup-container">
-          <div className="macos-window">
-            <div className="macos-titlebar">
-              <div className="macos-dot macos-dot--red" />
-              <div className="macos-dot macos-dot--yellow" />
-              <div className="macos-dot macos-dot--green" />
-              <span style={{ marginLeft: "auto", fontSize: "12px", color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>Clippy — Clipboard History</span>
-            </div>
-            <div className="macos-content" style={{ display: "flex", gap: "16px" }}>
-              {/* Sidebar */}
-              <div style={{ width: "200px", flexShrink: 0, borderRight: "1px solid rgba(255,255,255,0.06)", paddingRight: "16px" }}>
-                {/* Search bar */}
-                <div style={{
-                  background: "rgba(255,255,255,0.06)", borderRadius: "10px",
-                  padding: "10px 14px", fontSize: "13px", color: "rgba(255,255,255,0.3)",
-                  marginBottom: "20px", display: "flex", alignItems: "center", gap: "8px",
-                }}>
-                  {I.search(14)}
-                  Search...
-                </div>
-                {/* Categories */}
-                {["All Items", "Text", "Images", "Links", "Code", "Pinned"].map((cat, i) => (
-                  <div key={cat} style={{
-                    padding: "8px 12px", borderRadius: "8px",
-                    fontSize: "13px", fontWeight: i === 0 ? 600 : 400,
-                    color: i === 0 ? "#fff" : "rgba(255,255,255,0.4)",
-                    background: i === 0 ? "rgba(91,156,245,0.25)" : "transparent",
-                    marginBottom: "2px",
-                    transition: "all 0.2s",
-                  }}>
-                    {cat}
-                  </div>
-                ))}
-              </div>
-
-              {/* Content area */}
-              <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "8px" }}>
-                {[
-                  { type: "code", content: "const handleSubmit = async () => {...}", time: "2s ago", color: "#c792ea", source: "VS Code" },
-                  { type: "link", content: "https://developer.apple.com/design/", time: "15s ago", color: "#5B9CF5", source: "Safari" },
-                  { type: "text", content: "Meeting notes: Q1 roadmap discussion with the team about...", time: "1m ago", color: "#89DDFF", source: "Notion" },
-                  { type: "image", content: "Screenshot 2026-02-18 at 5.42 PM.png", time: "3m ago", color: "#C3E88D", source: "Figma" },
-                  { type: "text", content: "ssh user@production-server.com", time: "10m ago", color: "#F78C6C", source: "Terminal" },
-                  { type: "code", content: "npm install @clippy/core --save-dev", time: "25m ago", color: "#FFCB6B", source: "VS Code" },
-                ].map((item, i) => (
-                  <div key={i} style={{
-                    padding: "12px 16px",
-                    background: i === 0 ? "rgba(91,156,245,0.08)" : "rgba(255,255,255,0.02)",
-                    borderRadius: "10px",
-                    display: "flex", alignItems: "center", gap: "12px",
-                    border: i === 0 ? "1px solid rgba(91,156,245,0.2)" : "1px solid transparent",
-                    transition: "all 0.25s ease",
-                  }}>
-                    <div style={{
-                      width: "6px", height: "6px", borderRadius: "50%",
-                      background: item.color, flexShrink: 0,
-                    }} />
-                    <span style={{
-                      fontSize: "13px", color: "rgba(255,255,255,0.7)",
-                      flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                      fontFamily: item.type === "code" ? "monospace" : "inherit",
-                    }}>
-                      {item.content}
-                    </span>
-                    <span style={{
-                      fontSize: "10px", color: "rgba(255,255,255,0.25)",
-                      flexShrink: 0, fontWeight: 500, padding: "2px 6px",
-                      background: "rgba(255,255,255,0.05)", borderRadius: "4px",
-                    }}>
-                      {item.source}
-                    </span>
-                    <span style={{
-                      fontSize: "11px", color: "rgba(255,255,255,0.2)",
-                      flexShrink: 0, fontWeight: 500,
-                    }}>
-                      {item.time}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </TiltCard>
+      <div
+        className="mockup-float-container"
+        style={{
+          marginTop: "72px", width: "100%", maxWidth: "960px",
+          opacity: visible ? 1 : 0,
+          transform: visible ? "translateY(0) scale(1)" : "translateY(60px) scale(0.96)",
+          transition: "all 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.55s",
+        }}
+      >
+        <img
+          src="/Silver.svg"
+          alt="Clippy App Screenshot"
+          style={{
+            width: "100%",
+            height: "auto",
+            display: "block",
+            filter: "drop-shadow(0 40px 80px rgba(0,0,0,0.12))",
+            transition: "transform 0.5s ease-out",
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-12px)"}
+          onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(0)"}
+        />
       </div>
     </section>
   )
@@ -843,27 +776,59 @@ function TestimonialsSection() {
 
   const testimonials = [
     {
-      name: "Sarah Chen",
-      role: "Software Engineer at Stripe",
-      quote: "The syntax highlighting for 15+ languages is incredible. I copy code constantly and Clippy makes it easy to find and reuse any snippet instantly.",
-      avatar: "S",
+      name: "Saran Kathiravan",
+      role: "Developer",
+      quote: "Clippy has revolutionized my development workflow. The VisionOS-inspired interface is absolutely stunning.",
+      avatar: "SK",
+      color: "#007AFF",
+      rating: 5,
     },
     {
-      name: "Marcus Rodriguez",
-      role: "Product Designer at Figma",
-      quote: "The VisionOS-style frosted glass UI is gorgeous. It feels like a native Apple app. Quick Look previews with spacebar are a game-changer.",
-      avatar: "M",
-    },
-    {
-      name: "Emily Nakamura",
-      role: "Content Strategist at Notion",
+      name: "Amranth Prakash",
+      role: "Product Manager",
       quote: "I love that my data never leaves my device. The source app tracking shows exactly where each clip came from. Pin feature saves me hours weekly.",
-      avatar: "E",
+      avatar: "AP",
+      color: "#FF2D55",
+      rating: 4.5,
+    },
+    {
+      name: "Khyathi Jain",
+      role: "Designer",
+      quote: "The attention to detail in Clippy's interface is incredible. It feels like a native Apple application.",
+      avatar: "KJ",
+      color: "#AF52DE",
+      rating: 5,
+    },
+    {
+      name: "Srikar K",
+      role: "Power User",
+      quote: "I can't imagine working without Clippy now. It's become an essential part of my daily workflow.",
+      avatar: "SR",
+      color: "#FF9500",
+      rating: 4,
     },
   ]
 
+  // Duplicate for infinite scroll
+  const marqueeItems = [...testimonials, ...testimonials, ...testimonials]
+
+  const Star = ({ fill }: { fill: number }) => (
+    <div style={{ position: "relative", width: "14px", height: "14px", color: "#F5A623" }}>
+      {/* Empty/Background Star */}
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ position: "absolute", top: 0, left: 0, opacity: 0.3 }}>
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+      </svg>
+      {/* Filled/Partial Star */}
+      <div style={{ position: "absolute", top: 0, left: 0, width: `${fill * 100}%`, overflow: "hidden" }}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none" style={{ minWidth: "14px" }}>
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+        </svg>
+      </div>
+    </div>
+  )
+
   return (
-    <section id="testimonials" ref={ref} className="section">
+    <section id="testimonials" ref={ref} className="section" style={{ overflow: "hidden", padding: "100px 0" }}>
       <div style={{
         textAlign: "center", marginBottom: "64px",
         opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(24px)",
@@ -874,49 +839,85 @@ function TestimonialsSection() {
         </h2>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }}>
-        {testimonials.map((t, i) => (
-          <TiltCard key={i} className="testimonial-card" style={{
-            opacity: visible ? 1 : 0,
-            transform: visible ? "translateY(0)" : "translateY(32px)",
-            transition: `all 0.7s cubic-bezier(0.16, 1, 0.3, 1) ${0.1 + i * 0.1}s`,
-          }}>
-            {/* Stars */}
-            <div style={{ display: "flex", gap: "3px", marginBottom: "20px", color: "#F5A623" }}>
-              {Array.from({ length: 5 }).map((_, j) => <span key={j}>{I.star(14)}</span>)}
-            </div>
-            {/* Quote */}
-            <p style={{
-              fontSize: "15px", lineHeight: 1.65, color: "var(--text-primary)",
-              marginBottom: "24px", position: "relative", zIndex: 1,
+      {/* Marquee Container with Gradient Mask */}
+      <div style={{
+        position: "relative",
+        width: "100%",
+        maskImage: "linear-gradient(to right, transparent, black 15%, black 85%, transparent)",
+        WebkitMaskImage: "linear-gradient(to right, transparent, black 15%, black 85%, transparent)",
+      }}>
+        <div className="marquee-track" style={{
+          display: "flex",
+          gap: "24px",
+          width: "max-content",
+          animation: "scroll 40s linear infinite",
+          padding: "20px 0", // Space for shadows
+          alignItems: "stretch", // Ensure equal height cards
+        }}
+          onMouseEnter={(e) => e.currentTarget.style.animationPlayState = "paused"}
+          onMouseLeave={(e) => e.currentTarget.style.animationPlayState = "running"}
+        >
+          {marqueeItems.map((t, i) => (
+            <TiltCard key={i} className="testimonial-card" style={{
+              width: "380px",
+              flexShrink: 0,
+              opacity: visible ? 1 : 0,
+              transform: visible ? "scale(1)" : "scale(0.95)",
+              transition: `opacity 0.8s ease, transform 0.8s ease`,
+              display: "flex", flexDirection: "column", height: "auto", // Enable flex layout for internal alignment
             }}>
-              {t.quote}
-            </p>
-            {/* Author */}
-            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <div style={{
-                width: "36px", height: "36px", borderRadius: "50%",
-                background: `linear-gradient(135deg, hsl(${i * 90 + 200}, 50%, 65%), hsl(${i * 90 + 240}, 40%, 60%))`,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: "14px", fontWeight: 700, color: "white",
+              {/* Quote - Expands to fill space */}
+              <p style={{
+                fontSize: "15px", lineHeight: 1.6, color: "var(--text-primary)",
+                marginBottom: "24px", position: "relative", zIndex: 1,
+                flex: "1 1 auto", // Pushes footer to bottom
               }}>
-                {t.avatar}
+                "{t.quote}"
+              </p>
+
+              {/* Footer: Author + Stars */}
+              <div style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                marginTop: "auto", gap: "12px"
+              }}>
+                {/* Author (Left) */}
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <div style={{
+                    width: "36px", height: "36px", borderRadius: "50%",
+                    background: `linear-gradient(135deg, ${t.color}cc, ${t.color})`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: "13px", fontWeight: 700, color: "white",
+                    textShadow: "0 1px 2px rgba(0,0,0,0.1)", flexShrink: 0,
+                  }}>
+                    {t.avatar}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-primary)", lineHeight: 1.2 }}>{t.name}</div>
+                    <div style={{ fontSize: "12px", color: "var(--text-tertiary)" }}>{t.role}</div>
+                  </div>
+                </div>
+
+                {/* Stars (Right) */}
+                <div style={{ display: "flex", gap: "2px" }}>
+                  {Array.from({ length: 5 }).map((_, j) => {
+                    // Calculate fill for this star (0 to 1)
+                    const fill = Math.max(0, Math.min(1, t.rating - j))
+                    return <Star key={j} fill={fill} />
+                  })}
+                </div>
               </div>
-              <div>
-                <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-primary)" }}>{t.name}</div>
-                <div style={{ fontSize: "12px", color: "var(--text-tertiary)" }}>{t.role}</div>
-              </div>
-            </div>
-          </TiltCard>
-        ))}
+            </TiltCard>
+          ))}
+        </div>
       </div>
 
       <style dangerouslySetInnerHTML={{
         __html: `
-                @media (max-width: 768px) {
-                    #testimonials > div:last-of-type { grid-template-columns: 1fr !important; }
-                }
-            ` }} />
+          @keyframes scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(calc(-100% / 3)); }
+          }
+        ` }} />
     </section>
   )
 }
@@ -958,16 +959,19 @@ function Footer() {
         <a href="https://discord.com" target="_blank" rel="noopener noreferrer" className="social-icon">{I.discord()}</a>
       </div>
 
-      {/* Giant watermark — clipped at bottom like Alcove */}
+      {/* Giant watermark — visible at top, fades to transparent at bottom like Alcove */}
       <div style={{
         overflow: "hidden",
-        height: "clamp(140px, 18vw, 300px)",
+        height: "clamp(160px, 20vw, 320px)",
         position: "relative",
+        paddingTop: "12px",
+        maskImage: "linear-gradient(to bottom, black 0%, black 40%, transparent 100%)",
+        WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 40%, transparent 100%)",
       }}>
         <div className="watermark" style={{
           position: "absolute",
           left: "50%",
-          top: "0",
+          top: "12px",
           transform: "translateX(-50%)",
         }}>
           Clippy

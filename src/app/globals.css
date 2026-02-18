@@ -775,11 +775,10 @@ body {
   pointer-events: none;
   color: transparent;
   background: linear-gradient(180deg,
-      rgba(210, 190, 170, 0.0) 0%,
-      rgba(210, 190, 170, 0.12) 25%,
-      rgba(210, 190, 170, 0.22) 50%,
-      rgba(210, 190, 170, 0.32) 75%,
-      rgba(210, 190, 170, 0.38) 100%);
+      rgba(210, 190, 170, 0.38) 0%,
+      rgba(210, 190, 170, 0.28) 30%,
+      rgba(210, 190, 170, 0.12) 65%,
+      rgba(210, 190, 170, 0.0) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   white-space: nowrap;
@@ -823,6 +822,8 @@ body {
 .social-icon:hover::before {
   opacity: 1;
 }
+
+/* .nav-download-btn:active removed — handled in React */
 
 /* ═══════════════════════════════════════════════════════════════════
    SCROLLBAR
