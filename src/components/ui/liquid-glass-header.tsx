@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState, useCallback } from "react"
+import { useEffect, useRef, useState, useCallback, useMemo } from "react"
 
 interface NavSection {
     label: string
@@ -185,9 +185,16 @@ export function LiquidGlassHeader({
     }, [applyMaps])
 
     useEffect(() => {
-        const fn = () => applyMaps()
-        window.addEventListener("resize", fn)
-        return () => window.removeEventListener("resize", fn)
+        let resizeTimer: ReturnType<typeof setTimeout>
+        const fn = () => {
+            clearTimeout(resizeTimer)
+            resizeTimer = setTimeout(() => applyMaps(), 100)
+        }
+        window.addEventListener("resize", fn, { passive: true })
+        return () => {
+            clearTimeout(resizeTimer)
+            window.removeEventListener("resize", fn)
+        }
     }, [applyMaps])
 
     // Close mobile menu when clicking a link
@@ -198,9 +205,9 @@ export function LiquidGlassHeader({
     return (
         <>
             <div style={{
-                position: "fixed", top: "16px", left: 0, right: 0, zIndex: 999998,
+                position: "fixed", top: "max(16px, env(safe-area-inset-top, 16px))", left: 0, right: 0, zIndex: 999998,
                 display: "flex", alignItems: "center", justifyContent: "space-between",
-                padding: "0 24px", pointerEvents: "none", gap: "12px",
+                padding: "0 max(24px, env(safe-area-inset-left, 24px))", pointerEvents: "none", gap: "12px",
             }}>
                 {/* ══ LEFT GROUP: Logo pill + Title pill ══ */}
                 <div style={{ display: "flex", alignItems: "center", gap: "10px", pointerEvents: "auto" }}>
@@ -366,7 +373,7 @@ export function LiquidGlassHeader({
                 </div>
 
                 {/* ══ HAMBURGER (mobile) ══ */}
-                <button className="header-hamburger" onClick={() => setMobileOpen(!mobileOpen)} style={{
+                <button className="header-hamburger" onClick={() => setMobileOpen(!mobileOpen)} aria-label={mobileOpen ? "Close navigation menu" : "Open navigation menu"} style={{
                     ...pillStyle(scrolled),
                     width: `${GLASS.height}px`, display: "none", alignItems: "center", justifyContent: "center",
                     opacity: ready ? 1 : 0, pointerEvents: "auto", border: "none", cursor: "pointer",
@@ -394,7 +401,7 @@ export function LiquidGlassHeader({
             {/* ══ MOBILE NAV DROPDOWN ══ */}
             {mobileOpen && (
                 <div ref={mobileMenuRef} style={{
-                    position: "fixed", top: `${16 + GLASS.height + 12}px`, left: "24px", right: "24px",
+                    position: "fixed", top: `${16 + GLASS.height + 12}px`, left: "max(16px, env(safe-area-inset-left, 16px))", right: "max(16px, env(safe-area-inset-right, 16px))",
                     zIndex: 999997,
                     ...pillStyle(scrolled),
                     height: "auto", borderRadius: "20px", padding: "12px 8px",

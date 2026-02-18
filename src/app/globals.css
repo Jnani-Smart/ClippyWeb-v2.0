@@ -942,15 +942,257 @@ body {
   background: linear-gradient(90deg, transparent, rgba(28, 28, 30, 0.06), transparent);
 }
 
-/* ─── Responsive paddings ─── */
+/* ═══════════════════════════════════════════════════════════════════
+   RESPONSIVE — Comprehensive breakpoints for all devices
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ─── Showcase grid: single column on mobile/tablet ─── */
+.showcase-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: center;
+}
+
+/* ─── Tablet (≤1024px) ─── */
+@media (max-width: 1024px) {
+  .showcase-grid {
+    gap: 36px;
+  }
+
+  .testimonial-card {
+    padding: 28px 24px;
+  }
+}
+
+/* ─── Mobile landscape / Small tablet (≤768px) ─── */
+@media (max-width: 768px) {
+  .showcase-grid {
+    grid-template-columns: 1fr !important;
+    gap: 32px;
+  }
+
+  /* Reverse order for card-2 so text comes first on mobile */
+  .showcase-grid--reversed {
+    direction: ltr;
+  }
+  .showcase-grid--reversed > *:first-child {
+    order: 2;
+  }
+  .showcase-grid--reversed > *:last-child {
+    order: 1;
+  }
+
+  .testimonial-card {
+    padding: 24px 20px;
+  }
+
+  .testimonial-card::before {
+    font-size: 48px;
+    top: 14px;
+    left: 20px;
+  }
+}
+
+/* ─── Mobile (≤640px) ─── */
 @media (max-width: 640px) {
+  :root {
+    --radius-lg: 20px;
+    --radius-xl: 24px;
+  }
+
   .text-hero {
-    font-size: clamp(40px, 12vw, 72px);
+    font-size: clamp(36px, 11vw, 64px);
+  }
+
+  .text-headline {
+    font-size: clamp(28px, 7vw, 48px);
+  }
+
+  .text-title {
+    font-size: clamp(18px, 4.5vw, 26px);
   }
 
   .btn-dark,
   .btn-frosted {
     padding: 16px 28px;
     font-size: 15px;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .grid-features {
+    gap: 32px 20px;
+  }
+
+  .feature-icon {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 16px;
+  }
+
+  .feature-icon svg {
+    width: 36px;
+    height: 36px;
+  }
+
+  .glass-warm {
+    border-radius: var(--radius-lg);
+  }
+
+  .watermark {
+    font-size: clamp(120px, 22vw, 300px);
+  }
+
+  .social-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .divider {
+    margin-left: 20px;
+    margin-right: 20px;
+  }
+}
+
+/* ─── Very small screens (≤375px) — iPhone SE, etc. ─── */
+@media (max-width: 375px) {
+  .text-hero {
+    font-size: clamp(32px, 10vw, 52px);
+  }
+
+  .section,
+  .section-wide {
+    padding: 48px 16px;
+  }
+
+  .grid-features {
+    gap: 28px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SAFE AREAS — Notched devices (iPhone X+, etc.)
+   ═══════════════════════════════════════════════════════════════════ */
+
+@supports (padding: env(safe-area-inset-top)) {
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   REDUCED MOTION — Accessibility: respects OS-level preferences
+   ═══════════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .marquee-track {
+    animation: none !important;
+  }
+
+  .highlight-pink.animate-in::after {
+    animation: none !important;
+    transform: scaleX(1);
+    opacity: 0.7;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   TOUCH DEVICE OPTIMIZATIONS
+   ═══════════════════════════════════════════════════════════════════ */
+
+@media (hover: none) and (pointer: coarse) {
+  /* Disable tilt/hover effects that don't work on touch */
+  .glass-warm:hover {
+    transform: none;
+  }
+
+  .feature-icon:hover {
+    transform: none;
+  }
+
+  .testimonial-card:hover {
+    transform: none;
+  }
+
+  .social-icon:hover {
+    transform: none;
+  }
+
+  /* Larger tap targets for touch */
+  .social-icon {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    min-height: 48px;
+  }
+
+  /* Remove backdrop-filter on low-end touch devices for perf */
+  .feature-icon::before {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(255, 255, 255, 0.4);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   PERFORMANCE — GPU layers, containment, compositing hints
+   ═══════════════════════════════════════════════════════════════════ */
+
+.glass-warm,
+.testimonial-card,
+.btn-dark,
+.btn-frosted {
+  contain: layout style;
+}
+
+/* Marquee: promote to own layer for smooth 60fps scrolling */
+.marquee-track {
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   MARQUEE — Testimonial auto-scroll (moved from dangerouslySetInnerHTML)
+   ═══════════════════════════════════════════════════════════════════ */
+
+@keyframes scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(calc(-100% / 3)); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   PRINT — Clean output for printing
+   ═══════════════════════════════════════════════════════════════════ */
+
+@media print {
+  body {
+    background: white;
+    color: black;
+  }
+
+  .glass-warm,
+  .testimonial-card,
+  .btn-frosted,
+  .liquid-surface {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .marquee-track {
+    animation: none !important;
+    flex-wrap: wrap;
   }
 }

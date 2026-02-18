@@ -84,7 +84,7 @@ export function LiquidGlassDock({
             try {
                 const gsapModule = await import("gsap")
                 const gsap = gsapModule.default
-                const DraggableModule = await import("gsap/Draggable")
+                const DraggableModule = await import("gsap/Draggable" as string)
                 const Draggable = DraggableModule.Draggable || DraggableModule.default
                 gsap.registerPlugin(Draggable)
 
@@ -142,19 +142,23 @@ export function LiquidGlassDock({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
-    // Re-center on resize
+    // Re-center on resize (debounced)
     useEffect(() => {
+        let timer: ReturnType<typeof setTimeout>
         const handleResize = () => {
-            if (!effectRef.current) return
-            // Kill existing draggable transforms so we can reposition
-            draggableInstanceRef.current.forEach((d: any) => {
-                if (d) {
-                    d.update()
-                }
-            })
+            clearTimeout(timer)
+            timer = setTimeout(() => {
+                if (!effectRef.current) return
+                draggableInstanceRef.current.forEach((d: any) => {
+                    if (d) d.update()
+                })
+            }, 150)
         }
-        window.addEventListener("resize", handleResize)
-        return () => window.removeEventListener("resize", handleResize)
+        window.addEventListener("resize", handleResize, { passive: true })
+        return () => {
+            clearTimeout(timer)
+            window.removeEventListener("resize", handleResize)
+        }
     }, [])
 
     const config = DOCK_CONFIG

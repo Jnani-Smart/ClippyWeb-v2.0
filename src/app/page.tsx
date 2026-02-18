@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState, useCallback } from "react"
+import { useEffect, useRef, useState, useCallback, useMemo } from "react"
 import { LiquidGlassHeader } from "@/components/ui/liquid-glass-header"
 
 /* ═══════════════════════════════════════════════════════════════
@@ -348,7 +348,15 @@ function IconDrawWrapper({ children, delay = 0 }: { children: React.ReactNode, d
 
 function useMagnetic() {
   const ref = useRef<HTMLDivElement>(null)
+  const isTouch = useRef(false)
+
+  useEffect(() => {
+    // Detect touch device once
+    isTouch.current = window.matchMedia("(hover: none) and (pointer: coarse)").matches
+  }, [])
+
   const handleMove = useCallback((e: MouseEvent) => {
+    if (isTouch.current) return
     const el = ref.current
     if (!el) return
     const rect = el.getBoundingClientRect()
@@ -365,8 +373,8 @@ function useMagnetic() {
 
   useEffect(() => {
     const el = ref.current
-    if (!el) return
-    el.addEventListener("mousemove", handleMove)
+    if (!el || isTouch.current) return
+    el.addEventListener("mousemove", handleMove, { passive: true })
     el.addEventListener("mouseleave", handleLeave)
     return () => {
       el.removeEventListener("mousemove", handleMove)
@@ -382,8 +390,14 @@ function useMagnetic() {
 
 function TiltCard({ children, className = "", style = {} }: { children: React.ReactNode, className?: string, style?: React.CSSProperties }) {
   const ref = useRef<HTMLDivElement>(null)
+  const isTouch = useRef(false)
+
+  useEffect(() => {
+    isTouch.current = window.matchMedia("(hover: none) and (pointer: coarse)").matches
+  }, [])
 
   const handleMove = (e: React.MouseEvent) => {
+    if (isTouch.current) return
     const el = ref.current
     if (!el) return
     const rect = el.getBoundingClientRect()
@@ -446,10 +460,10 @@ function HeroSection() {
 
   return (
     <section id="hero" ref={ref} style={{
-      minHeight: "100vh",
+      minHeight: "100dvh",
       display: "flex", flexDirection: "column",
       alignItems: "center", justifyContent: "center",
-      padding: "140px 32px 80px",
+      padding: "clamp(100px, 14vh, 160px) clamp(16px, 4vw, 32px) clamp(40px, 8vh, 80px)",
       textAlign: "center",
       position: "relative",
     }}>
@@ -514,7 +528,10 @@ function HeroSection() {
       >
         <img
           src="/Silver.svg"
-          alt="Clippy App Screenshot"
+          alt="Clippy App — macOS clipboard manager with search, pin, and preview"
+          loading="eager"
+          decoding="async"
+          fetchPriority="high"
           style={{
             width: "100%",
             height: "auto",
@@ -606,9 +623,8 @@ function ShowcaseSection() {
   return (
     <div className="section-wide" style={{ paddingTop: 0 }}>
       {/* Card 1: Smart Search */}
-      <div ref={ref1} style={{
-        display: "grid", gridTemplateColumns: "1fr 1fr", gap: "48px",
-        alignItems: "center", marginBottom: "100px",
+      <div ref={ref1} className="showcase-grid" style={{
+        marginBottom: "clamp(60px, 8vw, 100px)",
         opacity: v1 ? 1 : 0, transform: v1 ? "translateY(0)" : "translateY(36px)",
         transition: "opacity 1.0s cubic-bezier(0.33, 1, 0.68, 1) 0.1s, transform 1.3s cubic-bezier(0.33, 1, 0.68, 1) 0.1s",
       }}>
@@ -621,23 +637,22 @@ function ShowcaseSection() {
           <p className="text-body" style={{ marginBottom: "28px" }}>
             Search across your entire clipboard history in milliseconds. Filter by category — text, code, URLs, or images. See which app each item came from.
           </p>
-          <div style={{ display: "flex", gap: "32px" }}>
+          <div style={{ display: "flex", gap: "clamp(16px, 4vw, 32px)", flexWrap: "wrap" }}>
             <div>
-              <div style={{ fontSize: "32px", fontWeight: 800, letterSpacing: "-0.04em", color: "var(--text-primary)" }}>
+              <div style={{ fontSize: "clamp(24px, 4vw, 32px)", fontWeight: 800, letterSpacing: "-0.04em", color: "var(--text-primary)" }}>
                 <Counter end={50} suffix="ms" />
               </div>
               <div style={{ fontSize: "13px", color: "var(--text-tertiary)", fontWeight: 500 }}>avg search time</div>
             </div>
             <div>
-              <div style={{ fontSize: "32px", fontWeight: 800, letterSpacing: "-0.04em", color: "var(--text-primary)" }}>
+              <div style={{ fontSize: "clamp(24px, 4vw, 32px)", fontWeight: 800, letterSpacing: "-0.04em", color: "var(--text-primary)" }}>
                 <Counter end={100} suffix="K+" />
               </div>
               <div style={{ fontSize: "13px", color: "var(--text-tertiary)", fontWeight: 500 }}>entries supported</div>
             </div>
           </div>
         </div>
-        <TiltCard className="glass-warm" style={{ padding: "32px", minHeight: "320px" }}>
-          {/* Search demo */}
+        <TiltCard className="glass-warm" style={{ padding: "clamp(20px, 3vw, 32px)", minHeight: "280px" }}>
           <div style={{
             background: "rgba(28, 28, 30, 0.04)", borderRadius: "14px", padding: "14px 18px",
             marginBottom: "20px", display: "flex", alignItems: "center", gap: "10px",
@@ -669,13 +684,12 @@ function ShowcaseSection() {
       </div>
 
       {/* Card 2: Pin & Organize */}
-      <div ref={ref2} style={{
-        display: "grid", gridTemplateColumns: "1fr 1fr", gap: "48px",
-        alignItems: "center", marginBottom: "100px",
+      <div ref={ref2} className="showcase-grid showcase-grid--reversed" style={{
+        marginBottom: "clamp(60px, 8vw, 100px)",
         opacity: v2 ? 1 : 0, transform: v2 ? "translateY(0)" : "translateY(36px)",
         transition: "opacity 1.0s cubic-bezier(0.33, 1, 0.68, 1) 0.1s, transform 1.3s cubic-bezier(0.33, 1, 0.68, 1) 0.1s",
       }}>
-        <TiltCard className="glass-warm" style={{ padding: "32px", minHeight: "320px" }}>
+        <TiltCard className="glass-warm" style={{ padding: "clamp(20px, 3vw, 32px)", minHeight: "280px" }}>
           {/* Pinned items demo */}
           <div style={{ marginBottom: "16px", fontWeight: 700, fontSize: "15px", color: "var(--text-primary)" }}>
             📌 Pinned
@@ -715,13 +729,13 @@ function ShowcaseSection() {
           <p className="text-body" style={{ marginBottom: "28px" }}>
             Keep frequently used items readily available. API keys, email templates, code blocks — pinned items stay accessible across sessions, always one shortcut away.
           </p>
-          <div style={{ display: "flex", gap: "32px" }}>
+          <div style={{ display: "flex", gap: "clamp(16px, 4vw, 32px)", flexWrap: "wrap" }}>
             <div>
-              <div style={{ fontSize: "32px", fontWeight: 800, letterSpacing: "-0.04em", color: "var(--text-primary)" }}>∞</div>
+              <div style={{ fontSize: "clamp(24px, 4vw, 32px)", fontWeight: 800, letterSpacing: "-0.04em", color: "var(--text-primary)" }}>∞</div>
               <div style={{ fontSize: "13px", color: "var(--text-tertiary)", fontWeight: 500 }}>pinned items</div>
             </div>
             <div>
-              <div style={{ fontSize: "32px", fontWeight: 800, letterSpacing: "-0.04em", color: "var(--text-primary)" }}>
+              <div style={{ fontSize: "clamp(24px, 4vw, 32px)", fontWeight: 800, letterSpacing: "-0.04em", color: "var(--text-primary)" }}>
                 <Counter end={12} />
               </div>
               <div style={{ fontSize: "13px", color: "var(--text-tertiary)", fontWeight: 500 }}>custom groups</div>
@@ -731,9 +745,7 @@ function ShowcaseSection() {
       </div>
 
       {/* Card 3: Privacy */}
-      <div ref={ref3} style={{
-        display: "grid", gridTemplateColumns: "1fr 1fr", gap: "48px",
-        alignItems: "center",
+      <div ref={ref3} className="showcase-grid" style={{
         opacity: v3 ? 1 : 0, transform: v3 ? "translateY(0)" : "translateY(36px)",
         transition: "opacity 1.0s cubic-bezier(0.33, 1, 0.68, 1) 0.1s, transform 1.3s cubic-bezier(0.33, 1, 0.68, 1) 0.1s",
       }}>
@@ -760,7 +772,7 @@ function ShowcaseSection() {
             ))}
           </div>
         </div>
-        <TiltCard className="glass-warm" style={{ padding: "40px", minHeight: "320px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <TiltCard className="glass-warm" style={{ padding: "clamp(24px, 4vw, 40px)", minHeight: "280px", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ textAlign: "center" }}>
             <div style={{
               width: "80px", height: "80px", borderRadius: "50%",
@@ -781,14 +793,6 @@ function ShowcaseSection() {
         </TiltCard>
       </div>
 
-      <style dangerouslySetInnerHTML={{
-        __html: `
-                @media (max-width: 768px) {
-                    .section-wide > div[style*="grid-template-columns"] {
-                        grid-template-columns: 1fr !important;
-                    }
-                }
-            ` }} />
     </div>
   )
 }
@@ -854,7 +858,7 @@ function TestimonialsSection() {
   )
 
   return (
-    <section id="testimonials" ref={ref} className="section" style={{ overflow: "hidden", padding: "100px 0" }}>
+    <section id="testimonials" ref={ref} className="section" style={{ overflow: "hidden", padding: "clamp(60px, 10vw, 100px) 0" }}>
       <div style={{
         textAlign: "center", marginBottom: "64px",
         opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(24px)",
@@ -874,31 +878,31 @@ function TestimonialsSection() {
       }}>
         <div className="marquee-track" style={{
           display: "flex",
-          gap: "24px",
+          gap: "clamp(16px, 2vw, 24px)",
           width: "max-content",
           animation: "scroll 40s linear infinite",
-          padding: "20px 0", // Space for shadows
-          alignItems: "stretch", // Ensure equal height cards
+          padding: "20px 0",
+          alignItems: "stretch",
         }}
           onMouseEnter={(e) => e.currentTarget.style.animationPlayState = "paused"}
           onMouseLeave={(e) => e.currentTarget.style.animationPlayState = "running"}
         >
           {marqueeItems.map((t, i) => (
             <TiltCard key={i} className="testimonial-card" style={{
-              width: "380px",
+              width: "clamp(300px, 32vw, 380px)",
               flexShrink: 0,
               opacity: visible ? 1 : 0,
               transform: visible ? "scale(1)" : "scale(0.95)",
               transition: `opacity 0.8s ease, transform 0.8s ease`,
-              display: "flex", flexDirection: "column", height: "auto", // Enable flex layout for internal alignment
+              display: "flex", flexDirection: "column", height: "auto",
             }}>
               {/* Quote - Expands to fill space */}
               <p style={{
                 fontSize: "15px", lineHeight: 1.6, color: "var(--text-primary)",
                 marginBottom: "24px", position: "relative", zIndex: 1,
-                flex: "1 1 auto", // Pushes footer to bottom
+                flex: "1 1 auto",
               }}>
-                "{t.quote}"
+                &ldquo;{t.quote}&rdquo;
               </p>
 
               {/* Footer: Author + Stars */}
@@ -936,14 +940,6 @@ function TestimonialsSection() {
           ))}
         </div>
       </div>
-
-      <style dangerouslySetInnerHTML={{
-        __html: `
-          @keyframes scroll {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(calc(-100% / 3)); }
-          }
-        ` }} />
     </section>
   )
 }
@@ -956,7 +952,7 @@ function DownloadSection() {
   const { ref, visible } = useInView()
 
   return (
-    <section id="download" ref={ref} className="section" style={{ textAlign: "center", paddingBottom: "60px" }}>
+    <section id="download" ref={ref} className="section" style={{ textAlign: "center", paddingBottom: "clamp(40px, 6vw, 60px)" }}>
       <div style={{
         opacity: visible ? 1 : 0,
         transform: visible ? "translateY(0) scale(1)" : "translateY(24px) scale(0.97)",
@@ -979,10 +975,10 @@ function Footer() {
   return (
     <footer style={{ overflow: "hidden" }}>
       {/* Social icons */}
-      <div style={{ display: "flex", justifyContent: "center", gap: "8px", marginBottom: "80px" }}>
-        <a href="https://x.com" target="_blank" rel="noopener noreferrer" className="social-icon">{I.x()}</a>
-        <a href="https://github.com/Jnani-Smart/Clippy" target="_blank" rel="noopener noreferrer" className="social-icon">{I.github()}</a>
-        <a href="https://discord.com" target="_blank" rel="noopener noreferrer" className="social-icon">{I.discord()}</a>
+      <div style={{ display: "flex", justifyContent: "center", gap: "8px", marginBottom: "clamp(40px, 8vw, 80px)" }}>
+        <a href="https://x.com" target="_blank" rel="noopener noreferrer" className="social-icon" aria-label="Follow on X">{I.x()}</a>
+        <a href="https://github.com/Jnani-Smart/Clippy" target="_blank" rel="noopener noreferrer" className="social-icon" aria-label="View on GitHub">{I.github()}</a>
+        <a href="https://discord.com" target="_blank" rel="noopener noreferrer" className="social-icon" aria-label="Join Discord">{I.discord()}</a>
       </div>
 
       {/* Giant watermark — visible at top, fades to transparent at bottom like Alcove */}
