@@ -159,20 +159,164 @@ const I = {
    INTERSECTION OBSERVER — scroll-driven animations
    ═══════════════════════════════════════════════════════════════ */
 
-function useInView(threshold = 0.12) {
-  const ref = useRef<HTMLDivElement>(null)
+function useInView(threshold = 0.15) {
+  const ref = useRef<HTMLElement>(null)
   const [visible, setVisible] = useState(false)
   useEffect(() => {
     const el = ref.current
     if (!el) return
     const obs = new IntersectionObserver(
       ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect() } },
-      { threshold, rootMargin: "0px 0px -60px 0px" }
+      { threshold }
     )
     obs.observe(el)
     return () => obs.disconnect()
   }, [threshold])
-  return { ref, visible }
+  return { ref: ref as React.RefObject<any>, visible }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ANIMATED HIGHLIGHT — pink sweep that slides in on scroll
+   ═══════════════════════════════════════════════════════════════ */
+
+function AnimatedHighlight({ children, className = "" }: { children: React.ReactNode, className?: string }) {
+  const ref = useRef<HTMLSpanElement>(null)
+  const [inView, setInView] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const obs = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) { setInView(true); obs.disconnect() }
+    }, { threshold: 0.1 })
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+  return (
+    <span ref={ref} className={`highlight-pink ${inView ? "animate-in" : ""} ${className}`}>
+      {children}
+    </span>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SCRIBBLE OVAL — hand-drawn circle that draws itself on scroll
+   Uses JS-driven animation to avoid CSS specificity issues
+   ═══════════════════════════════════════════════════════════════ */
+
+function ScribbleOval({ children }: { children: React.ReactNode }) {
+  const containerRef = useRef<HTMLSpanElement>(null)
+  const pathRef = useRef<SVGPathElement>(null)
+
+  useEffect(() => {
+    const container = containerRef.current
+    const path = pathRef.current
+    if (!container || !path) return
+
+    // Get actual path length for accurate dash animation
+    const len = path.getTotalLength()
+    path.style.strokeDasharray = `${len}`
+    path.style.strokeDashoffset = `${len}`
+
+    const obs = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) {
+        // Use rAF to ensure initial state is painted before animating
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            path.style.transition = "stroke-dashoffset 1.0s cubic-bezier(0.22, 1, 0.36, 1)"
+            path.style.strokeDashoffset = "0"
+          })
+        })
+        obs.disconnect()
+      }
+    }, { threshold: 0.1 })
+    obs.observe(container)
+    return () => obs.disconnect()
+  }, [])
+
+  return (
+    <span ref={containerRef} className="circle-accent" style={{ position: "relative", display: "inline-block" }}>
+      {children}
+      <svg
+        viewBox="0 0 200 80"
+        preserveAspectRatio="none"
+        style={{
+          position: "absolute",
+          top: "-14px",
+          left: "-18px",
+          right: "-18px",
+          bottom: "-12px",
+          width: "calc(100% + 36px)",
+          height: "calc(100% + 26px)",
+          pointerEvents: "none",
+          overflow: "visible",
+        }}
+      >
+        <path
+          ref={pathRef}
+          d="M 100 10 C 155 8, 192 22, 190 40 C 188 58, 150 72, 100 70 C 50 72, 12 58, 10 40 C 8 22, 45 8, 100 10 Z"
+          fill="none"
+          stroke="var(--accent-lavender)"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          opacity="0.75"
+        />
+      </svg>
+    </span>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ICON DRAW WRAPPER — SVG strokes draw themselves on scroll
+   Uses JS to get actual path lengths and animate each stroke
+   ═══════════════════════════════════════════════════════════════ */
+
+function IconDrawWrapper({ children, delay = 0 }: { children: React.ReactNode, delay?: number }) {
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+
+    const svgEl = el.querySelector("svg")
+    if (!svgEl) return
+
+    // Get all stroke-able SVG elements
+    const strokes = svgEl.querySelectorAll("path, polyline, line, rect, circle, polygon")
+
+    // Setup: measure each path and hide it
+    strokes.forEach((s) => {
+      const stroke = s as SVGGeometryElement
+      try {
+        const len = stroke.getTotalLength()
+        stroke.style.strokeDasharray = `${len}`
+        stroke.style.strokeDashoffset = `${len}`
+      } catch {
+        // Some elements (e.g. zero-length lines) don't support getTotalLength
+        stroke.style.strokeDasharray = "100"
+        stroke.style.strokeDashoffset = "100"
+      }
+    })
+
+    const obs = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            strokes.forEach((s, i) => {
+              const stroke = s as SVGElement
+              stroke.style.transition = `stroke-dashoffset 0.8s cubic-bezier(0.22, 1, 0.36, 1) ${delay + i * 0.06}s`
+              stroke.style.strokeDashoffset = "0"
+            })
+          })
+        })
+        obs.disconnect()
+      }
+    }, { threshold: 0.1 })
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [delay])
+
+  return <div ref={ref}>{children}</div>
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -276,7 +420,6 @@ function Counter({ end, suffix = "", duration = 2000 }: { end: number, suffix?: 
 
 function HeroSection() {
   const { ref, visible } = useInView(0.05)
-  const logoRef = useMagnetic()
 
   return (
     <section id="hero" ref={ref} style={{
@@ -287,22 +430,7 @@ function HeroSection() {
       textAlign: "center",
       position: "relative",
     }}>
-      {/* LOGO — floating with magnetic effect */}
-      <div ref={logoRef} style={{
-        width: "80px", height: "80px", borderRadius: "20px",
-        background: "var(--text-primary)",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        marginBottom: "48px",
-        boxShadow: "0 12px 40px rgba(28,28,30,0.18)",
-        transition: "transform 0.35s cubic-bezier(0.34,1.56,0.64,1)",
-        cursor: "default",
-        opacity: visible ? 1 : 0,
-        animation: visible ? "scaleIn 0.6s cubic-bezier(0.16,1,0.3,1) forwards" : "none",
-      }}>
-        <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#F5F5F0" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
-        </svg>
-      </div>
+
 
       {/* HEADLINE — massive, with pink highlight */}
       <h1 className="text-hero" style={{
@@ -314,7 +442,7 @@ function HeroSection() {
       }}>
         Your clipboard,{" "}
         <br />
-        <span className="highlight-pink" style={{ display: "inline-flex", alignItems: "baseline", gap: "4px" }}>reimagined</span>
+        <AnimatedHighlight className="" >reimagined</AnimatedHighlight>
       </h1>
 
       {/* Subtitle */}
@@ -459,13 +587,19 @@ function FeatureItem({ icon, label, accent, visible, index }: { icon: (s?: numbe
       transition: `all 0.8s cubic-bezier(0.16, 1, 0.3, 1) ${0.05 + index * 0.06}s`,
       cursor: "default",
     }}>
-      <div ref={magnetRef} className="feature-icon" style={{ transition: "transform 0.35s cubic-bezier(0.34,1.56,0.64,1)" }}>
-        {icon(44)}
-      </div>
+      <IconDrawWrapper delay={0.05 + index * 0.06}>
+        <div
+          ref={magnetRef}
+          className="feature-icon"
+          style={{ transition: "transform 0.35s cubic-bezier(0.34,1.56,0.64,1)" }}
+        >
+          {icon(44)}
+        </div>
+      </IconDrawWrapper>
       {accent === "circle" ? (
         <h3 className="text-title" style={{ whiteSpace: "pre-line", lineHeight: 1.2 }}>
           Blazing fast<br />
-          <span className="circle-accent">native app</span>
+          <ScribbleOval>native app</ScribbleOval>
         </h3>
       ) : (
         <h3 className="text-title" style={{ whiteSpace: "pre-line", lineHeight: 1.2 }}>
@@ -523,7 +657,7 @@ function ShowcaseSection() {
           <p className="text-label" style={{ marginBottom: "16px", color: "var(--accent-blue)" }}>QUICK SEARCH</p>
           <h2 className="text-headline" style={{ marginBottom: "20px" }}>
             Find anything,{" "}
-            <span className="highlight-pink">instantly</span>
+            <AnimatedHighlight>instantly</AnimatedHighlight>
           </h2>
           <p className="text-body" style={{ marginBottom: "28px" }}>
             Search across your entire clipboard history in milliseconds. Filter by category — text, code, URLs, or images. See which app each item came from.
@@ -617,7 +751,7 @@ function ShowcaseSection() {
           <p className="text-label" style={{ marginBottom: "16px", color: "var(--accent-lavender)" }}>ORGANIZE</p>
           <h2 className="text-headline" style={{ marginBottom: "20px" }}>
             Pin what{" "}
-            <span className="circle-accent">matters</span>
+            <ScribbleOval>matters</ScribbleOval>
           </h2>
           <p className="text-body" style={{ marginBottom: "28px" }}>
             Keep frequently used items readily available. API keys, email templates, code blocks — pinned items stay accessible across sessions, always one shortcut away.
@@ -648,7 +782,7 @@ function ShowcaseSection() {
           <p className="text-label" style={{ marginBottom: "16px", color: "#C3E88D" }}>PRIVACY</p>
           <h2 className="text-headline" style={{ marginBottom: "20px" }}>
             Your data stays{" "}
-            <span className="highlight-pink">yours</span>
+            <AnimatedHighlight>yours</AnimatedHighlight>
           </h2>
           <p className="text-body" style={{ marginBottom: "28px" }}>
             Your clipboard data never leaves your device. Zero cloud dependency, zero tracking. Import and export your clipboard history anytime. Minimal CPU and memory footprint.
@@ -736,7 +870,7 @@ function TestimonialsSection() {
         transition: "all 0.8s cubic-bezier(0.16, 1, 0.3, 1)",
       }}>
         <h2 className="text-headline">
-          Loved by <span className="highlight-pink">professionals</span>
+          Loved by <AnimatedHighlight>professionals</AnimatedHighlight>
         </h2>
       </div>
 
@@ -853,6 +987,7 @@ export default function Home() {
   return (
     <main>
       <LiquidGlassHeader
+        logoSrc="/logo.png"
         title="Clippy"
         version={version ?? undefined}
         sections={[

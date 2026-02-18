@@ -22,13 +22,13 @@ const DEFAULT_SECTIONS: NavSection[] = [
 ]
 
 const GLASS = {
-    height: 52,
-    radius: 26,
+    height: 60,
+    radius: 30,
     border: 0.06,
     lightness: 54,
     alpha: 0.88,
     blur: 14,
-    frost: 0.04,
+    frost: 0.45,
     scale: -140,
     saturation: 1.6,
     blend: "difference" as const,
@@ -92,13 +92,13 @@ function Specular() {
 const pillStyle = (scrolled: boolean): React.CSSProperties => ({
     height: `${GLASS.height}px`,
     borderRadius: `${GLASS.radius}px`,
-    background: `hsl(0 0% 100% / ${scrolled ? 0.07 : GLASS.frost})`,
+    background: `hsl(0 0% 100% / ${scrolled ? 0.55 : GLASS.frost})`,
     boxShadow: scrolled
-        ? `0 0 0 0.5px rgba(255,255,255,0.35) inset, 0 0 2px 1px rgba(0,0,0,0.10) inset,
-           0 0 10px 4px rgba(0,0,0,0.05) inset, 0 4px 20px rgba(17,17,26,0.08),
+        ? `0 0 0 0.5px rgba(255,255,255,0.45) inset, 0 0 2px 1px rgba(0,0,0,0.08) inset,
+           0 0 10px 4px rgba(0,0,0,0.04) inset, 0 4px 20px rgba(17,17,26,0.08),
            0 8px 32px rgba(17,17,26,0.06), 0 16px 48px rgba(17,17,26,0.04)`
-        : `0 0 0 0.5px rgba(255,255,255,0.3) inset, 0 0 2px 1px rgba(0,0,0,0.08) inset,
-           0 0 10px 4px rgba(0,0,0,0.04) inset, 0 4px 16px rgba(17,17,26,0.05),
+        : `0 0 0 0.5px rgba(255,255,255,0.4) inset, 0 0 2px 1px rgba(0,0,0,0.06) inset,
+           0 0 10px 4px rgba(0,0,0,0.03) inset, 0 4px 16px rgba(17,17,26,0.05),
            0 8px 24px rgba(17,17,26,0.04), 0 16px 56px rgba(17,17,26,0.03)`,
     transition: "box-shadow 0.4s cubic-bezier(.4,0,.2,1), background 0.4s cubic-bezier(.4,0,.2,1)",
     position: "relative" as const,
@@ -111,16 +111,28 @@ export function LiquidGlassHeader({
     sections = DEFAULT_SECTIONS,
     version,
 }: LiquidGlassHeaderProps) {
+    const logoPillRef = useRef<HTMLDivElement>(null)
     const leftRef = useRef<HTMLDivElement>(null)
     const rightRef = useRef<HTMLDivElement>(null)
+    const logoPillSvgRef = useRef<SVGSVGElement>(null)
     const leftSvgRef = useRef<SVGSVGElement>(null)
     const rightSvgRef = useRef<SVGSVGElement>(null)
     const [ready, setReady] = useState(false)
     const [hovered, setHovered] = useState<number | null>(null)
+    const [highlight, setHighlight] = useState<{ x: number; w: number; h: number } | null>(null)
     const [scrolled, setScrolled] = useState(false)
     const [mobileOpen, setMobileOpen] = useState(false)
+    const navRef = useRef<HTMLElement>(null)
     const mobileMenuRef = useRef<HTMLDivElement>(null)
     const mobileFilterRef = useRef<SVGSVGElement>(null)
+
+    // Shorten version: "v1.9.0" → "v1.9", "1.9.0" → "v1.9"
+    const shortVersion = (() => {
+        const v = version || "v2.0"
+        const cleaned = v.replace(/^v/, "")
+        const parts = cleaned.split(".")
+        return `v${parts[0]}.${parts[1] || "0"}`
+    })()
 
     useEffect(() => {
         const fn = () => setScrolled(window.scrollY > 10)
@@ -129,6 +141,11 @@ export function LiquidGlassHeader({
     }, [])
 
     const applyMaps = useCallback(() => {
+        if (logoPillRef.current && logoPillSvgRef.current) {
+            const w = logoPillRef.current.getBoundingClientRect().width
+            logoPillSvgRef.current.querySelectorAll("feImage")
+                .forEach((img) => img.setAttribute("href", buildDisplacementUri(w, "hdr-logo")))
+        }
         if (leftRef.current && leftSvgRef.current) {
             const w = leftRef.current.getBoundingClientRect().width
             leftSvgRef.current.querySelectorAll("feImage")
@@ -154,7 +171,7 @@ export function LiquidGlassHeader({
                 const gsap = gsapModule.default
                 if (!mounted) return
                 applyMaps()
-                const targets = [leftRef.current, rightRef.current].filter(Boolean)
+                const targets = [logoPillRef.current, leftRef.current, rightRef.current].filter(Boolean)
                 gsap.fromTo(targets, { y: -20, opacity: 0 }, {
                     y: 0, opacity: 1, duration: 0.65, ease: "power3.out", delay: 0.2, stagger: 0.06,
                     onComplete: () => { if (mounted) setReady(true) },
@@ -181,44 +198,53 @@ export function LiquidGlassHeader({
             <div style={{
                 position: "fixed", top: "16px", left: 0, right: 0, zIndex: 999998,
                 display: "flex", alignItems: "center", justifyContent: "space-between",
-                padding: "0 24px", pointerEvents: "none", gap: "16px",
+                padding: "0 24px", pointerEvents: "none", gap: "12px",
             }}>
-                {/* ══ LEFT PILL: Logo + Title ══ */}
-                <div ref={leftRef} style={{
-                    ...pillStyle(scrolled),
-                    display: "flex", alignItems: "center", padding: "0 20px", gap: "10px",
-                    opacity: 0, pointerEvents: "auto", flexShrink: 0, cursor: "default",
-                    backdropFilter: `url(#hdr-l) brightness(1.12) saturate(${c.saturation})`,
-                    WebkitBackdropFilter: `url(#hdr-l) brightness(1.12) saturate(${c.saturation})`,
-                }}>
-                    {logoSrc ? (
-                        <img src={logoSrc} alt={`${title} logo`} draggable={false}
-                            style={{ width: "28px", height: "28px", objectFit: "contain", borderRadius: "7px" }} />
-                    ) : (
-                        <div style={{
-                            width: "28px", height: "28px", borderRadius: "8px",
-                            background: "linear-gradient(145deg, rgba(100,100,100,0.12) 0%, rgba(160,160,160,0.06) 100%)",
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            boxShadow: "0 0 0 0.5px rgba(255,255,255,0.2) inset, 0 1px 3px rgba(0,0,0,0.06)",
-                            flexShrink: 0,
-                        }}>
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(60,60,60,0.7)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                {/* ══ LEFT GROUP: Logo pill + Title pill ══ */}
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", pointerEvents: "auto" }}>
+                    {/* ── LOGO PILL (round) ── */}
+                    <div ref={logoPillRef} style={{
+                        ...pillStyle(scrolled),
+                        width: `${GLASS.height}px`, height: `${GLASS.height}px`,
+                        borderRadius: `${GLASS.height / 2}px`,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        opacity: 0, flexShrink: 0, cursor: "default", padding: 0,
+                        backdropFilter: `url(#hdr-logo) brightness(1.12) saturate(${c.saturation})`,
+                        WebkitBackdropFilter: `url(#hdr-logo) brightness(1.12) saturate(${c.saturation})`,
+                    }}>
+                        {logoSrc ? (
+                            <img src={logoSrc} alt={`${title} logo`} draggable={false}
+                                style={{ width: "44px", height: "44px", objectFit: "contain", filter: "drop-shadow(0 2px 8px rgba(28,28,30,0.2))" }} />
+                        ) : (
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(60,60,60,0.7)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
                             </svg>
-                        </div>
-                    )}
-                    <span style={{
-                        fontSize: "16px", fontWeight: 600, letterSpacing: "-0.015em",
-                        color: "rgba(29,29,31,0.88)", lineHeight: 1, whiteSpace: "nowrap",
-                        fontFamily: '-apple-system, "SF Pro Display", "Helvetica Neue", sans-serif',
-                    }}>{title}</span>
-                    <span style={{
-                        padding: "2px 8px", fontSize: "10px", fontWeight: 600,
-                        color: "rgba(29,29,31,0.4)", background: "rgba(29,29,31,0.05)",
-                        borderRadius: "5px", letterSpacing: "0.02em", lineHeight: 1.2,
-                    }}>{version || "v2.0"}</span>
-                    <Specular />
-                    <GlassFilter id="hdr-l" svgRef={leftSvgRef} />
+                        )}
+                        <Specular />
+                        <GlassFilter id="hdr-logo" svgRef={logoPillSvgRef} />
+                    </div>
+
+                    {/* ── TITLE + BADGE PILL ── */}
+                    <div ref={leftRef} style={{
+                        ...pillStyle(scrolled),
+                        display: "flex", alignItems: "center", padding: "0 20px", gap: "10px",
+                        opacity: 0, flexShrink: 0, cursor: "default",
+                        backdropFilter: `url(#hdr-l) brightness(1.12) saturate(${c.saturation})`,
+                        WebkitBackdropFilter: `url(#hdr-l) brightness(1.12) saturate(${c.saturation})`,
+                    }}>
+                        <span style={{
+                            fontSize: "20px", fontWeight: 700, letterSpacing: "-0.02em",
+                            color: "rgba(29,29,31,0.92)", lineHeight: 1, whiteSpace: "nowrap",
+                            fontFamily: '-apple-system, "SF Pro Display", "Helvetica Neue", sans-serif',
+                        }}>{title}</span>
+                        <span style={{
+                            padding: "4px 10px", fontSize: "12px", fontWeight: 600,
+                            color: "rgba(120,90,60,0.7)", background: "rgba(170,140,100,0.12)",
+                            borderRadius: "8px", letterSpacing: "0.01em", lineHeight: 1.3,
+                        }}>{shortVersion}</span>
+                        <Specular />
+                        <GlassFilter id="hdr-l" svgRef={leftSvgRef} />
+                    </div>
                 </div>
 
                 {/* ══ RIGHT PILL: Nav (desktop) ══ */}
@@ -229,20 +255,55 @@ export function LiquidGlassHeader({
                     backdropFilter: `url(#hdr-r) brightness(1.12) saturate(${c.saturation})`,
                     WebkitBackdropFilter: `url(#hdr-r) brightness(1.12) saturate(${c.saturation})`,
                 }}>
-                    <nav style={{
+                    <nav ref={navRef} style={{
                         display: "flex", alignItems: "center", gap: "2px",
                         opacity: ready ? 1 : 0, transition: "opacity 0.4s ease-out",
-                    }}>
+                        position: "relative",
+                    }}
+                        onMouseLeave={() => { setHovered(null); setHighlight(null) }}
+                    >
+                        {/* ── sliding highlight ── */}
+                        <div style={{
+                            position: "absolute",
+                            top: 0, left: 0,
+                            width: highlight ? `${highlight.w}px` : "0px",
+                            height: highlight ? `${highlight.h}px` : "0px",
+                            transform: highlight ? `translateX(${highlight.x}px)` : "translateX(0)",
+                            background: "rgba(0,0,0,0.055)",
+                            borderRadius: `${GLASS.radius - 4}px`,
+                            transition: hovered !== null
+                                ? "transform 0.32s cubic-bezier(.4,0,.2,1), width 0.32s cubic-bezier(.4,0,.2,1), height 0.32s cubic-bezier(.4,0,.2,1), opacity 0.2s ease"
+                                : "opacity 0.2s ease",
+                            opacity: highlight ? 1 : 0,
+                            pointerEvents: "none",
+                            zIndex: 0,
+                        }} />
                         {sections.map((s, i) => (
-                            <a key={i} href={s.href || "#"} onMouseEnter={() => setHovered(i)} onMouseLeave={() => setHovered(null)}
+                            <a key={i} href={s.href || "#"}
+                                onMouseEnter={(e) => {
+                                    setHovered(i)
+                                    const el = e.currentTarget
+                                    const nav = navRef.current
+                                    if (nav) {
+                                        const navRect = nav.getBoundingClientRect()
+                                        const elRect = el.getBoundingClientRect()
+                                        setHighlight({
+                                            x: elRect.left - navRect.left,
+                                            w: elRect.width,
+                                            h: elRect.height,
+                                        })
+                                    }
+                                }}
                                 style={{
-                                    fontSize: "13px", fontWeight: 500, letterSpacing: "0.005em",
-                                    color: hovered === i ? "rgba(29,29,31,0.95)" : "rgba(29,29,31,0.55)",
-                                    fontFamily: '-apple-system, "SF Pro Text", "Helvetica Neue", sans-serif',
-                                    textDecoration: "none", padding: "8px 16px", borderRadius: "20px",
-                                    background: hovered === i ? "rgba(0,0,0,0.045)" : "transparent",
-                                    transition: "color 0.22s ease, background 0.22s ease",
+                                    fontSize: "15px", fontWeight: 600, letterSpacing: "-0.01em",
+                                    color: hovered === i ? "rgba(29,29,31,0.95)" : "rgba(29,29,31,0.6)",
+                                    fontFamily: '-apple-system, "SF Pro Display", "Helvetica Neue", sans-serif',
+                                    textDecoration: "none", padding: "10px 20px",
+                                    borderRadius: `${GLASS.radius - 4}px`,
+                                    background: "transparent",
+                                    transition: "color 0.22s ease",
                                     cursor: "pointer", whiteSpace: "nowrap", lineHeight: 1,
+                                    position: "relative", zIndex: 1,
                                 }}>
                                 {s.label}
                             </a>
@@ -294,8 +355,9 @@ export function LiquidGlassHeader({
                         {sections.map((s, i) => (
                             <a key={i} href={s.href || "#"} onClick={handleNavClick}
                                 style={{
-                                    fontSize: "15px", fontWeight: 500, color: "rgba(29,29,31,0.8)",
-                                    fontFamily: '-apple-system, "SF Pro Text", sans-serif',
+                                    fontSize: "16px", fontWeight: 600, color: "rgba(29,29,31,0.8)",
+                                    fontFamily: '-apple-system, "SF Pro Display", "Helvetica Neue", sans-serif',
+                                    letterSpacing: "-0.01em",
                                     textDecoration: "none", padding: "12px 16px", borderRadius: "14px",
                                     transition: "background 0.2s ease", cursor: "pointer", lineHeight: 1,
                                 }}

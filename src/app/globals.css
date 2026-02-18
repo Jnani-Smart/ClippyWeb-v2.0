@@ -254,10 +254,21 @@ body {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   HIGHLIGHT & ACCENT DECORATIONS
+   HIGHLIGHT & ACCENT DECORATIONS — Apple-style micro-animations
    ═══════════════════════════════════════════════════════════════════ */
 
-/* Alcove-style pink highlight behind text */
+/* Highlight sweep keyframes — always plays from start */
+@keyframes highlightSweep {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Pink underline highlight — sweeps left-to-right on scroll */
 .highlight-pink {
   position: relative;
   display: inline;
@@ -274,27 +285,23 @@ body {
   border-radius: 4px;
   z-index: -1;
   opacity: 0.7;
+  transform-origin: left center;
+  transform: scaleX(0);
 }
 
-/* Hand-drawn circle around text (like Alcove's "native app") */
+/* When animate-in is toggled, fire the keyframe animation */
+.highlight-pink.animate-in::after {
+  animation: highlightSweep 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.25s both;
+}
+
+/* Hand-drawn scribble oval — SVG draws itself on scroll */
 .circle-accent {
   position: relative;
   display: inline-block;
 }
 
-.circle-accent::after {
-  content: '';
-  position: absolute;
-  top: -12px;
-  left: -16px;
-  right: -16px;
-  bottom: -10px;
-  border: 2.5px solid var(--accent-lavender);
-  border-radius: 50%;
-  transform: rotate(-3deg);
-  pointer-events: none;
-  opacity: 0.75;
-}
+/* (Scribble draw and icon stroke-draw are handled via JavaScript
+   in ScribbleOval and IconDrawWrapper components) */
 
 /* ═══════════════════════════════════════════════════════════════════
    GLASS CARD — liquid glass effect
