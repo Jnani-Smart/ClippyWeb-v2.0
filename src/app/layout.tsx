@@ -8,8 +8,8 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "Clippy — by Jnani Smart",
-  description: "Clippy Web Application with liquid glass effects",
+  title: "Clippy — Elegant Clipboard Manager for macOS",
+  description: "A lightweight, beautiful clipboard manager for macOS. Store text, URLs, code snippets, and images. Instant access with ⌘⇧V. Privacy-focused — your data never leaves your device.",
 };
 
 export default function RootLayout({
