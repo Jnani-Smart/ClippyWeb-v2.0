@@ -197,8 +197,16 @@ export function LiquidGlassHeader({
         }
     }, [applyMaps])
 
-    // Close mobile menu when clicking a link
-    const handleNavClick = () => setMobileOpen(false)
+    // Smooth-scroll nav links with centering and prevent default anchor jump
+    const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href?: string) => {
+        setMobileOpen(false)
+        if (!href || !href.startsWith("#")) return
+        const target = document.querySelector(href)
+        if (target) {
+            e.preventDefault()
+            target.scrollIntoView({ behavior: "smooth", block: "center" })
+        }
+    }
 
     const c = GLASS
 
@@ -315,6 +323,7 @@ export function LiquidGlassHeader({
                             const isDownload = s.label === "Download";
                             return (
                                 <a key={i} href={s.href || "#"}
+                                    onClick={(e) => handleNavClick(e, s.href)}
                                     className={isDownload ? "nav-download-btn" : ""}
                                     onMouseEnter={(e) => {
                                         setHovered(i)
@@ -412,7 +421,7 @@ export function LiquidGlassHeader({
                 }}>
                     <nav style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
                         {sections.map((s, i) => (
-                            <a key={i} href={s.href || "#"} onClick={handleNavClick}
+                            <a key={i} href={s.href || "#"} onClick={(e) => handleNavClick(e, s.href)}
                                 style={{
                                     fontSize: "16px", fontWeight: 600, color: "rgba(29,29,31,0.8)",
                                     fontFamily: '-apple-system, "SF Pro Display", "Helvetica Neue", sans-serif',

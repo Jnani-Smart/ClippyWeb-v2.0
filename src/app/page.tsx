@@ -612,187 +612,390 @@ function FeaturesSection() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   3 · SHOWCASE — Large feature cards with demos
+   3 · SHOWCASE — Scroll-morph sticky feature cards
    ═══════════════════════════════════════════════════════════════ */
 
-function ShowcaseSection() {
-  const { ref: ref1, visible: v1 } = useInView()
-  const { ref: ref2, visible: v2 } = useInView()
-  const { ref: ref3, visible: v3 } = useInView()
+/* Morph-aware highlight — forces animation restart via key remount */
+function MorphHighlight({ children, active }: { children: React.ReactNode, active: boolean }) {
+  const [animKey, setAnimKey] = useState(0)
+  const wasActive = useRef(false)
+
+  useEffect(() => {
+    if (active && !wasActive.current) {
+      setAnimKey(k => k + 1)
+    }
+    wasActive.current = active
+  }, [active])
 
   return (
-    <div className="section-wide" style={{ paddingTop: 0 }}>
-      {/* Card 1: Smart Search */}
-      <div ref={ref1} className="showcase-grid" style={{
-        marginBottom: "clamp(60px, 8vw, 100px)",
-        opacity: v1 ? 1 : 0, transform: v1 ? "translateY(0)" : "translateY(36px)",
-        transition: "opacity 1.0s cubic-bezier(0.33, 1, 0.68, 1) 0.1s, transform 1.3s cubic-bezier(0.33, 1, 0.68, 1) 0.1s",
+    <span key={animKey} className={`highlight-pink ${active ? "animate-in" : ""}`}>
+      {children}
+    </span>
+  )
+}
+
+/* Morph-aware scribble oval — triggered by active prop */
+function MorphScribble({ children, active }: { children: React.ReactNode, active: boolean }) {
+  const pathRef = useRef<SVGPathElement>(null)
+  const initialized = useRef(false)
+
+  useEffect(() => {
+    const path = pathRef.current
+    if (!path) return
+    const len = path.getTotalLength()
+    if (!initialized.current) {
+      path.style.strokeDasharray = `${len}`
+      path.style.strokeDashoffset = `${len}`
+      path.style.opacity = "0"
+      initialized.current = true
+    }
+    if (active) {
+      requestAnimationFrame(() => {
+        path.style.transition = "opacity 0.3s ease, stroke-dashoffset 1.2s cubic-bezier(0.33,1,0.68,1)"
+        path.style.opacity = "0.75"
+        path.style.strokeDashoffset = "0"
+      })
+    }
+  }, [active])
+
+  return (
+    <span className="circle-accent" style={{ position: "relative", display: "inline-block" }}>
+      {children}
+      <svg
+        viewBox="0 0 200 80"
+        preserveAspectRatio="none"
+        style={{
+          position: "absolute",
+          top: "-14px",
+          left: "-18px",
+          right: "-18px",
+          bottom: "-12px",
+          width: "calc(100% + 36px)",
+          height: "calc(100% + 26px)",
+          pointerEvents: "none",
+          overflow: "visible",
+        }}
+      >
+        <path
+          ref={pathRef}
+          d="M 100 10 C 155 8, 192 22, 190 40 C 188 58, 150 72, 100 70 C 50 72, 12 58, 10 40 C 8 22, 45 8, 100 10 Z"
+          fill="none"
+          stroke="#7B5CE7"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          opacity="0"
+        />
+      </svg>
+    </span>
+  )
+}
+
+/* Search micro-animation — search icon scans across content type icons */
+function SearchCategoryAnimation() {
+  const [active, setActive] = useState(0)
+  const categories = useMemo(() => [
+    { icon: (
+      <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+        <line x1="8" y1="13" x2="16" y2="13" /><line x1="8" y1="17" x2="12" y2="17" />
+      </svg>
+    ), label: "Text", color: "#5B9CF5" },
+    { icon: (
+      <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2" />
+        <circle cx="8.5" cy="8.5" r="1.5" />
+        <polyline points="21 15 16 10 5 21" />
+      </svg>
+    ), label: "Images", color: "#E8913A" },
+    { icon: (
+      <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+      </svg>
+    ), label: "URLs", color: "#3BAA6E" },
+    { icon: (
+      <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="16 18 22 12 16 6" />
+        <polyline points="8 6 2 12 8 18" />
+      </svg>
+    ), label: "Code", color: "#7B5CE7" },
+  ], [])
+
+  useEffect(() => {
+    const timer = setInterval(() => setActive(a => (a + 1) % categories.length), 1800)
+    return () => clearInterval(timer)
+  }, [categories.length])
+
+  return (
+    <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+      {/* Animated search icon */}
+      <div style={{
+        width: "36px", height: "36px", borderRadius: "10px",
+        background: "rgba(91,156,245,0.1)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        color: "var(--accent-blue)",
+        animation: "gentlePulse 2.4s ease-in-out infinite",
+        flexShrink: 0,
       }}>
-        <div>
-          <p className="text-label" style={{ marginBottom: "16px", color: "var(--accent-blue)" }}>QUICK SEARCH</p>
-          <h2 className="text-headline" style={{ marginBottom: "20px" }}>
-            Find anything,{" "}
-            <AnimatedHighlight delay={300}>instantly</AnimatedHighlight>
-          </h2>
-          <p className="text-body" style={{ marginBottom: "28px" }}>
-            Search across your entire clipboard history in milliseconds. Filter by category — text, code, URLs, or images. See which app each item came from.
-          </p>
-          <div style={{ display: "flex", gap: "clamp(16px, 4vw, 32px)", flexWrap: "wrap" }}>
-            <div>
-              <div style={{ fontSize: "clamp(24px, 4vw, 32px)", fontWeight: 800, letterSpacing: "-0.04em", color: "var(--text-primary)" }}>
-                <Counter end={50} suffix="ms" />
-              </div>
-              <div style={{ fontSize: "13px", color: "var(--text-tertiary)", fontWeight: 500 }}>avg search time</div>
-            </div>
-            <div>
-              <div style={{ fontSize: "clamp(24px, 4vw, 32px)", fontWeight: 800, letterSpacing: "-0.04em", color: "var(--text-primary)" }}>
-                <Counter end={100} suffix="K+" />
-              </div>
-              <div style={{ fontSize: "13px", color: "var(--text-tertiary)", fontWeight: 500 }}>entries supported</div>
-            </div>
+        <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+      </div>
+
+      {/* Category pills */}
+      {categories.map((cat, i) => (
+        <div
+          key={i}
+          style={{
+            display: "flex", alignItems: "center", gap: "6px",
+            padding: "6px 12px", borderRadius: "100px",
+            background: active === i ? `${cat.color}15` : "rgba(28,28,30,0.04)",
+            border: `1.5px solid ${active === i ? `${cat.color}40` : "rgba(28,28,30,0.04)"}`,
+            color: active === i ? cat.color : "var(--text-tertiary)",
+            transition: "all 0.4s cubic-bezier(0.33,1,0.68,1)",
+            transform: active === i ? "scale(1.05)" : "scale(1)",
+            fontSize: "12px", fontWeight: 600,
+          }}
+        >
+          {cat.icon}
+          <span>{cat.label}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function ShowcaseSection() {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [progress, setProgress] = useState(0)
+  const [entered, setEntered] = useState(false)
+  const [stickyActive, setStickyActive] = useState(false)
+
+  // Slides data — animations are driven by activeIndex
+  const totalSlides = 3
+  const segmentSize = 1 / totalSlides
+
+  // Scroll-driven progress: 0 → 1 across the tall container
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+
+    let ticking = false
+    const onScroll = () => {
+      if (ticking) return
+      ticking = true
+      requestAnimationFrame(() => {
+        const rect = container.getBoundingClientRect()
+        const containerH = container.offsetHeight
+        const viewH = window.innerHeight
+        const scrolled = -rect.top
+        const scrollable = containerH - viewH
+        const p = Math.max(0, Math.min(1, scrolled / scrollable))
+        setProgress(p)
+        if (rect.top < viewH && rect.bottom > 0) setEntered(true)
+        // Mark sticky as active once the container top reaches viewport top
+        if (rect.top <= 0 && !stickyActive) setStickyActive(true)
+        ticking = false
+      })
+    }
+
+    window.addEventListener("scroll", onScroll, { passive: true })
+    onScroll()
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
+
+  const activeIndex = Math.min(totalSlides - 1, Math.floor(progress * totalSlides))
+
+  // Smoothstep for buttery easing
+  const smoothstep = (t: number) => t * t * (3 - 2 * t)
+
+  const getSlideOpacity = useCallback((index: number) => {
+    const slideStart = index * segmentSize
+    const slideEnd = (index + 1) * segmentSize
+    const fadeZone = segmentSize * 0.3
+
+    if (progress >= slideStart && progress <= slideEnd) {
+      if (progress < slideStart + fadeZone && index > 0) {
+        return smoothstep((progress - slideStart) / fadeZone)
+      }
+      if (progress > slideEnd - fadeZone && index < totalSlides - 1) {
+        return smoothstep((slideEnd - progress) / fadeZone)
+      }
+      return 1
+    }
+    return 0
+  }, [progress, segmentSize])
+
+  const getSlideTransform = useCallback((index: number) => {
+    const opacity = getSlideOpacity(index)
+    if (opacity <= 0) return "translateY(16px)"
+    if (opacity >= 1) return "translateY(0)"
+    const slideCenter = (index + 0.5) * segmentSize
+    const dist = (1 - opacity) * 16
+    return progress < slideCenter
+      ? `translateY(${dist}px)`
+      : `translateY(${-dist}px)`
+  }, [progress, getSlideOpacity, segmentSize])
+
+  // Build slides with morph-aware animation components
+  const slides = useMemo(() => [
+    {
+      label: "QUICK SEARCH",
+      labelColor: "var(--accent-blue)",
+      headline: (isActive: boolean) => <>Find anything, <MorphHighlight active={isActive}>instantly</MorphHighlight></>,
+      body: "Search across your entire clipboard history in milliseconds. Filter by category — text, code, URLs, or images. See which app each item came from.",
+      bottom: <SearchCategoryAnimation />,
+      image: "/search.svg",
+      imageAlt: "Search section preview",
+    },
+    {
+      label: "ORGANIZE",
+      labelColor: "#7B5CE7",
+      headline: (isActive: boolean) => <>Pin what <MorphScribble active={isActive}>matters</MorphScribble></>,
+      body: "Keep frequently used items readily available. API keys, email templates, code blocks — pinned items stay accessible across sessions, always one shortcut away.",
+      bottom: (
+        <div style={{ display: "flex", gap: "clamp(16px, 4vw, 32px)", flexWrap: "wrap", alignItems: "center" }}>
+          <div>
+            <div style={{ fontSize: "clamp(24px, 4vw, 32px)", fontWeight: 800, letterSpacing: "-0.04em", color: "var(--text-primary)" }}>∞</div>
+            <div style={{ fontSize: "13px", color: "var(--text-tertiary)", fontWeight: 500 }}>pinned items</div>
           </div>
         </div>
-        <TiltCard className="glass-warm" style={{ padding: "clamp(20px, 3vw, 32px)", minHeight: "280px" }}>
-          <div style={{
-            background: "rgba(28, 28, 30, 0.04)", borderRadius: "14px", padding: "14px 18px",
-            marginBottom: "20px", display: "flex", alignItems: "center", gap: "10px",
-          }}>
-            {I.search(18)}
-            <span style={{ color: "var(--text-primary)", fontWeight: 500, fontSize: "15px" }}>deploy script</span>
-            <span style={{ marginLeft: "auto", fontSize: "11px", color: "var(--text-tertiary)", fontWeight: 600 }}>⌘F</span>
-          </div>
-          {[
-            { text: "deploy-production.sh — ./scripts/", match: "deploy", time: "2h" },
-            { text: "git push origin deploy-branch", match: "deploy", time: "4h" },
-            { text: "Deployment checklist for v2.0 release", match: "Deploy", time: "1d" },
-          ].map((r, i) => (
-            <div key={i} style={{
-              padding: "14px 16px", borderRadius: "12px",
-              background: i === 0 ? "rgba(91,156,245,0.06)" : "transparent",
-              border: i === 0 ? "1px solid rgba(91,156,245,0.15)" : "1px solid transparent",
-              marginBottom: "6px",
-              display: "flex", alignItems: "center",
-              transition: "all 0.25s",
+      ),
+      image: "/Pinned.svg",
+      imageAlt: "Organize section preview",
+    },
+    {
+      label: "QUEUE",
+      labelColor: "#3BAA6E",
+      headline: (isActive: boolean) => <>Line up your <MorphHighlight active={isActive}>clips</MorphHighlight></>,
+      body: "Add clips to the Queue, then paste them one by one with ⌃V. Each paste auto-advances to the next item — no re-copying, no switching windows. Clear the queue when you're done.",
+      bottom: (
+        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+          {["⌃V to Paste Next", "Auto-Advance", "Reorder Anytime"].map((tag) => (
+            <span key={tag} style={{
+              padding: "8px 16px", borderRadius: "100px",
+              background: "rgba(28,28,30,0.05)",
+              fontSize: "13px", fontWeight: 600,
+              color: "var(--text-secondary)",
+              border: "1px solid rgba(28,28,30,0.04)",
             }}>
-              <span style={{ fontSize: "14px", color: "var(--text-primary)", flex: 1 }}>
-                {r.text}
-              </span>
-              <span style={{ fontSize: "12px", color: "var(--text-tertiary)", fontWeight: 500 }}>{r.time}</span>
-            </div>
+              {tag}
+            </span>
           ))}
-        </TiltCard>
-      </div>
+        </div>
+      ),
+      image: "/queue.svg",
+      imageAlt: "Clippy Queue feature screenshot",
+    },
+  ], [])
 
-      {/* Card 2: Pin & Organize */}
-      <div ref={ref2} className="showcase-grid showcase-grid--reversed" style={{
-        marginBottom: "clamp(60px, 8vw, 100px)",
-        opacity: v2 ? 1 : 0, transform: v2 ? "translateY(0)" : "translateY(36px)",
-        transition: "opacity 1.0s cubic-bezier(0.33, 1, 0.68, 1) 0.1s, transform 1.3s cubic-bezier(0.33, 1, 0.68, 1) 0.1s",
-      }}>
-        <TiltCard className="glass-warm" style={{ padding: "clamp(20px, 3vw, 32px)", minHeight: "280px" }}>
-          {/* Pinned items demo */}
-          <div style={{ marginBottom: "16px", fontWeight: 700, fontSize: "15px", color: "var(--text-primary)" }}>
-            📌 Pinned
+  return (
+    <div
+      id="gallery"
+      ref={containerRef}
+      style={{ height: "250vh", position: "relative" }}
+    >
+      <div
+        className="section-wide showcase-morph-sticky"
+        style={{
+          position: "sticky",
+          top: 0,
+          height: "100vh",
+          display: "flex",
+          alignItems: "center",
+          paddingTop: 0,
+          opacity: entered ? 1 : 0,
+          transform: entered ? "translateY(0)" : "translateY(24px)",
+          transition: "opacity 0.6s cubic-bezier(0.33,1,0.68,1), transform 0.8s cubic-bezier(0.33,1,0.68,1)",
+        }}
+      >
+        <div className="showcase-grid" style={{ width: "100%" }}>
+          {/* Left: Text content */}
+          <div style={{ position: "relative", minHeight: "260px" }}>
+            {slides.map((slide, i) => {
+              const opacity = getSlideOpacity(i)
+              const isActive = stickyActive && activeIndex === i && opacity > 0.5 && (i !== 0 || progress > 0.05)
+              return (
+                <div
+                  key={i}
+                  style={{
+                    position: i === 0 ? "relative" : "absolute",
+                    top: 0, left: 0, width: "100%",
+                    opacity,
+                    transform: getSlideTransform(i),
+                    pointerEvents: opacity > 0.5 ? "auto" : "none",
+                    willChange: "opacity, transform",
+                  }}
+                >
+                  <p className="text-label" style={{ marginBottom: "16px", color: slide.labelColor }}>{slide.label}</p>
+                  <h2 className="text-headline" style={{ marginBottom: "20px" }}>
+                    {slide.headline(isActive)}
+                  </h2>
+                  <p className="text-body" style={{ marginBottom: "28px" }}>
+                    {slide.body}
+                  </p>
+                  {slide.bottom}
+                </div>
+              )
+            })}
           </div>
-          {[
-            { emoji: "🔑", text: "API_KEY=sk-proj-abc123...", color: "#F78C6C" },
-            { emoji: "📧", text: "team@company.com", color: "#5B9CF5" },
-            { emoji: "🔗", text: "https://figma.com/file/design-system", color: "#C3E88D" },
-            { emoji: "💳", text: "4242 •••• •••• 4242", color: "#c792ea" },
-          ].map((item, i) => (
-            <div key={i} style={{
-              padding: "14px 16px", borderRadius: "12px",
-              background: "rgba(28, 28, 30, 0.025)",
-              border: "1px solid rgba(28, 28, 30, 0.04)",
-              marginBottom: "8px",
-              display: "flex", alignItems: "center", gap: "12px",
-              transition: "all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
-              cursor: "pointer",
-            }}
-              onMouseEnter={e => { e.currentTarget.style.transform = "translateX(4px)"; e.currentTarget.style.background = "rgba(28,28,30,0.04)" }}
-              onMouseLeave={e => { e.currentTarget.style.transform = "translateX(0)"; e.currentTarget.style.background = "rgba(28,28,30,0.025)" }}
-            >
-              <span style={{ fontSize: "18px" }}>{item.emoji}</span>
-              <span style={{ fontSize: "14px", color: "var(--text-primary)", fontFamily: "monospace", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {item.text}
-              </span>
-              <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: item.color }} />
-            </div>
-          ))}
-        </TiltCard>
-        <div>
-          <p className="text-label" style={{ marginBottom: "16px", color: "var(--accent-lavender)" }}>ORGANIZE</p>
-          <h2 className="text-headline" style={{ marginBottom: "20px" }}>
-            Pin what{" "}
-            <ScribbleOval delay={200}>matters</ScribbleOval>
-          </h2>
-          <p className="text-body" style={{ marginBottom: "28px" }}>
-            Keep frequently used items readily available. API keys, email templates, code blocks — pinned items stay accessible across sessions, always one shortcut away.
-          </p>
-          <div style={{ display: "flex", gap: "clamp(16px, 4vw, 32px)", flexWrap: "wrap" }}>
-            <div>
-              <div style={{ fontSize: "clamp(24px, 4vw, 32px)", fontWeight: 800, letterSpacing: "-0.04em", color: "var(--text-primary)" }}>∞</div>
-              <div style={{ fontSize: "13px", color: "var(--text-tertiary)", fontWeight: 500 }}>pinned items</div>
-            </div>
-            <div>
-              <div style={{ fontSize: "clamp(24px, 4vw, 32px)", fontWeight: 800, letterSpacing: "-0.04em", color: "var(--text-primary)" }}>
-                <Counter end={12} />
-              </div>
-              <div style={{ fontSize: "13px", color: "var(--text-tertiary)", fontWeight: 500 }}>custom groups</div>
-            </div>
+
+          {/* Right: Image card */}
+          <div style={{ position: "relative", minHeight: "280px" }}>
+            {slides.map((slide, i) => {
+              const opacity = getSlideOpacity(i)
+              return (
+                <TiltCard
+                  key={i}
+                  className="glass-warm"
+                  style={{
+                    padding: "clamp(20px, 3vw, 32px)",
+                    minHeight: "280px",
+                    position: i === 0 ? "relative" : "absolute",
+                    top: 0, left: 0, width: "100%",
+                    opacity,
+                    transform: `scale(${0.96 + opacity * 0.04})`,
+                    pointerEvents: opacity > 0.5 ? "auto" : "none",
+                    willChange: "opacity, transform",
+                  }}
+                >
+                  <img
+                    src={slide.image}
+                    alt={slide.imageAlt}
+                    loading={i === 0 ? "eager" : "lazy"}
+                    decoding="async"
+                    draggable={false}
+                    style={{
+                      width: "100%",
+                      height: "auto",
+                      borderRadius: "14px",
+                      display: "block",
+                    }}
+                  />
+                </TiltCard>
+              )
+            })}
           </div>
         </div>
-      </div>
 
-      {/* Card 3: Privacy */}
-      <div ref={ref3} className="showcase-grid" style={{
-        opacity: v3 ? 1 : 0, transform: v3 ? "translateY(0)" : "translateY(36px)",
-        transition: "opacity 1.0s cubic-bezier(0.33, 1, 0.68, 1) 0.1s, transform 1.3s cubic-bezier(0.33, 1, 0.68, 1) 0.1s",
-      }}>
-        <div>
-          <p className="text-label" style={{ marginBottom: "16px", color: "#C3E88D" }}>PRIVACY</p>
-          <h2 className="text-headline" style={{ marginBottom: "20px" }}>
-            Your data stays{" "}
-            <AnimatedHighlight delay={300}>yours</AnimatedHighlight>
-          </h2>
-          <p className="text-body" style={{ marginBottom: "28px" }}>
-            Your clipboard data never leaves your device. Zero cloud dependency, zero tracking. Import and export your clipboard history anytime. Minimal CPU and memory footprint.
-          </p>
-          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-            {["100% Local", "Import/Export", "Minimal Footprint", "Data Management"].map((tag) => (
-              <span key={tag} style={{
-                padding: "8px 16px", borderRadius: "100px",
-                background: "rgba(28,28,30,0.05)",
-                fontSize: "13px", fontWeight: 600,
-                color: "var(--text-secondary)",
-                border: "1px solid rgba(28,28,30,0.04)",
-              }}>
-                {tag}
-              </span>
-            ))}
-          </div>
+        {/* Progress dots */}
+        <div className="showcase-morph-dots">
+          {slides.map((_, i) => (
+            <div
+              key={i}
+              style={{
+                width: activeIndex === i ? "24px" : "8px",
+                height: "8px",
+                borderRadius: "100px",
+                background: activeIndex === i ? "var(--text-primary)" : "rgba(28,28,30,0.15)",
+                transition: "all 0.25s cubic-bezier(0.33,1,0.68,1)",
+              }}
+            />
+          ))}
         </div>
-        <TiltCard className="glass-warm" style={{ padding: "clamp(24px, 4vw, 40px)", minHeight: "280px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div style={{ textAlign: "center" }}>
-            <div style={{
-              width: "80px", height: "80px", borderRadius: "50%",
-              background: "linear-gradient(135deg, rgba(195,232,141,0.2), rgba(91,156,245,0.1))",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              margin: "0 auto 20px",
-              animation: "gentlePulse 3s ease-in-out infinite",
-            }}>
-              {I.shield(40)}
-            </div>
-            <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-primary)", marginBottom: "6px" }}>
-              100% Local
-            </div>
-            <div style={{ fontSize: "13px", color: "var(--text-tertiary)" }}>
-              No servers. No tracking. No compromise.
-            </div>
-          </div>
-        </TiltCard>
       </div>
-
     </div>
   )
 }
@@ -858,7 +1061,7 @@ function TestimonialsSection() {
   )
 
   return (
-    <section id="testimonials" ref={ref} className="section" style={{ overflow: "hidden", padding: "clamp(60px, 10vw, 100px) 0" }}>
+    <section id="testimonials" ref={ref} className="section" style={{ overflow: "hidden", paddingLeft: 0, paddingRight: 0 }}>
       <div style={{
         textAlign: "center", marginBottom: "64px",
         opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(24px)",
@@ -952,7 +1155,7 @@ function DownloadSection() {
   const { ref, visible } = useInView()
 
   return (
-    <section id="download" ref={ref} className="section" style={{ textAlign: "center", paddingBottom: "clamp(40px, 6vw, 60px)" }}>
+    <section id="download" ref={ref} className="section" style={{ textAlign: "center" }}>
       <div style={{
         opacity: visible ? 1 : 0,
         transform: visible ? "translateY(0) scale(1)" : "translateY(24px) scale(0.97)",
@@ -1010,6 +1213,16 @@ function Footer() {
 export default function Home() {
   const version = useLatestVersion()
 
+  // Ensure page always starts at top on (re)load and disable browser scroll restoration
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      if ("scrollRestoration" in window.history) {
+        window.history.scrollRestoration = "manual"
+      }
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" })
+    }
+  }, [])
+
   return (
     <main>
       <LiquidGlassHeader
@@ -1018,6 +1231,7 @@ export default function Home() {
         version={version ?? undefined}
         sections={[
           { label: "Features", href: "#features" },
+          { label: "Gallery", href: "#gallery" },
           { label: "Testimonials", href: "#testimonials" },
           { label: "Download", href: "#download" },
         ]}
@@ -1027,7 +1241,6 @@ export default function Home() {
       <FeaturesSection />
       <ShowcaseSection />
 
-      <div className="divider" />
       <TestimonialsSection />
 
       <DownloadSection />
