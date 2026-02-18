@@ -8,7 +8,7 @@ const geistSans = Geist({
   display: "swap",
 });
 
-const siteUrl = "https://clippy.app";
+const siteUrl = "https://clippyapp.live";
 const siteName = "Clippy";
 const siteDescription =
   "A lightweight, beautiful clipboard manager for macOS. Store text, URLs, code snippets, and images. Instant access with ⌘⇧V. Privacy-focused — your data never leaves your device.";
