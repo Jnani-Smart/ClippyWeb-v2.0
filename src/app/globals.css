@@ -810,7 +810,9 @@ body {
   font-weight: 900;
   letter-spacing: -0.04em;
   text-align: center;
-  line-height: 0.8;
+  line-height: 0.92;
+  display: inline-block;
+  padding-inline: 0.06em;
   user-select: none;
   pointer-events: none;
   color: transparent;
