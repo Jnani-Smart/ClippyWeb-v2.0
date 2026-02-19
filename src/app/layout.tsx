@@ -10,10 +10,39 @@ const geistSans = Geist({
   display: "swap",
 });
 
-const siteUrl = "https://clippyapp.live";
+const siteUrl = "https://www.clippyapp.live";
+const vercelUrl = "https://clippyapp.vercel.app";
 const siteName = "Clippy";
 const siteDescription =
   "A lightweight, beautiful clipboard manager for macOS. Store text, URLs, code snippets, and images. Instant access with ⌘⇧V. Privacy-focused — your data never leaves your device.";
+const ogImagePath = "/opengraph-image.png";
+const twitterImagePath = "/twitter-image.png";
+
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: siteName,
+  url: siteUrl,
+  inLanguage: "en-US",
+  description: siteDescription,
+};
+
+const softwareJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: siteName,
+  operatingSystem: "macOS",
+  applicationCategory: "UtilitiesApplication",
+  description: siteDescription,
+  url: siteUrl,
+  downloadUrl: `${siteUrl}/download/latest`,
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "USD",
+  },
+  sameAs: [vercelUrl, "https://github.com/Jnani-Smart/Clippy"],
+};
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -27,17 +56,31 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: {
     default: "Clippy - Clipboard Manager for macOS",
     template: "%s | Clippy",
   },
   description: siteDescription,
-  metadataBase: new URL(siteUrl),
+  alternates: {
+    canonical: "/",
+  },
   applicationName: siteName,
+  manifest: "/manifest.webmanifest",
   authors: [{ name: "Jnani Smart", url: "https://github.com/Jnani-Smart" }],
   creator: "Jnani Smart",
   publisher: siteName,
   category: "productivity",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  appleWebApp: {
+    capable: true,
+    title: siteName,
+    statusBarStyle: "default",
+  },
   keywords: [
     "clipboard manager",
     "macOS clipboard",
@@ -58,9 +101,9 @@ export const metadata: Metadata = {
     description: siteDescription,
     images: [
       {
-        url: "/logo.png",
-        width: 512,
-        height: 512,
+        url: ogImagePath,
+        width: 1200,
+        height: 630,
         alt: "Clippy — Clipboard Manager for macOS",
       },
     ],
@@ -69,7 +112,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Clippy — Clipboard Manager for macOS",
     description: siteDescription,
-    images: ["/logo.png"],
+    images: [twitterImagePath],
   },
   icons: {
     icon: "/icon.png",
@@ -78,7 +121,13 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
-    googleBot: { index: true, follow: true },
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
   },
 };
 
@@ -95,6 +144,14 @@ export default function RootLayout({
           rel="preconnect"
           href="https://fonts.gstatic.com"
           crossOrigin="anonymous"
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareJsonLd) }}
         />
         <script
           dangerouslySetInnerHTML={{

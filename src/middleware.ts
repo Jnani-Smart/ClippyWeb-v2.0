@@ -5,6 +5,17 @@ const STATIC_FILE_EXT = /\.[^/]+$/;
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const host = (request.headers.get("host") || "")
+    .toLowerCase()
+    .split(":")[0];
+
+  // Always canonicalize the apex to www for consistent indexing and caching.
+  if (host === "clippyapp.live") {
+    const url = request.nextUrl.clone();
+    url.protocol = "https";
+    url.hostname = "www.clippyapp.live";
+    return NextResponse.redirect(url, 308);
+  }
 
   const isNextAsset =
     pathname.startsWith("/_next/static") || pathname.startsWith("/_next/image");
@@ -22,10 +33,14 @@ export function middleware(request: NextRequest) {
   );
   response.headers.set("Pragma", "no-cache");
   response.headers.set("Expires", "0");
+
+  // Prevent duplicate indexing for deployment aliases/previews.
+  if (host.endsWith(".vercel.app")) {
+    response.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
+  }
   return response;
 }
 
 export const config = {
   matcher: "/:path*",
 };
-

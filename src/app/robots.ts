@@ -6,6 +6,7 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: "*",
       allow: "/",
     },
-    sitemap: "https://clippyapp.live/sitemap.xml",
+    sitemap: "https://www.clippyapp.live/sitemap.xml",
+    host: "https://www.clippyapp.live",
   };
 }
