@@ -647,7 +647,7 @@ function HeroSection() {
         transform: visible ? "translateY(0)" : "translateY(24px)",
         transition: "opacity 1.0s cubic-bezier(0.33, 1, 0.68, 1) 0.5s, transform 1.2s cubic-bezier(0.33, 1, 0.68, 1) 0.5s",
       }}>
-        <MorphingDownloadButton href="/download/Clippy.app.zip" className="btn-dark" iconSize={18} />
+        <MorphingDownloadButton href="/download/latest" className="btn-dark" iconSize={18} />
         <AnimatedButton href="https://github.com/Jnani-Smart/Clippy" target="_blank" rel="noopener noreferrer" className="btn-frosted">
           {I.github(18)}
           View on GitHub
@@ -1317,7 +1317,7 @@ function DownloadSection() {
         transition: "opacity 1.0s cubic-bezier(0.33, 1, 0.68, 1) 0.1s, transform 1.3s cubic-bezier(0.33, 1, 0.68, 1) 0.1s",
       }}>
         <MorphingDownloadButton
-          href="/download/Clippy.app.zip"
+          href="/download/latest"
           className="btn-dark"
           style={{ padding: "clamp(20px, 4vw, 26px) clamp(48px, 10vw, 80px)", fontSize: "clamp(18px, 2.5vw, 22px)" }}
           iconSize={24}
