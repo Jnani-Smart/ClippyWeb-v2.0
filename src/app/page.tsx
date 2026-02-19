@@ -468,7 +468,7 @@ function HeroSection() {
       minHeight: "100dvh",
       display: "flex", flexDirection: "column",
       alignItems: "center", justifyContent: "center",
-      padding: "clamp(100px, 14vh, 160px) clamp(16px, 4vw, 32px) clamp(40px, 8vh, 80px)",
+      padding: "clamp(80px, 12vh, 160px) clamp(16px, 5vw, 32px) clamp(32px, 6vh, 80px)",
       textAlign: "center",
       position: "relative",
       willChange: "opacity, transform"
@@ -492,12 +492,13 @@ function HeroSection() {
       <p className="text-body" style={{
         maxWidth: "560px",
         textAlign: "center",
-        marginBottom: "40px",
+        marginBottom: "clamp(28px, 5vw, 40px)",
         opacity: visible ? 1 : 0,
         transform: visible ? "translateY(0)" : "translateY(28px)",
         transition: "opacity 1.1s cubic-bezier(0.33, 1, 0.68, 1) 0.3s, transform 1.3s cubic-bezier(0.33, 1, 0.68, 1) 0.3s",
-        fontSize: "18px",
+        fontSize: "clamp(16px, 2.2vw, 18px)",
         lineHeight: 1.6,
+        padding: "0 clamp(0px, 2vw, 12px)",
       }}>
         A lightweight, elegant clipboard manager for{" "}
         <span style={{ display: "inline-flex", alignItems: "baseline", gap: "3px" }}><span style={{ display: "inline-block", verticalAlign: "-0.1em" }}>{I.apple(16)}</span> macOS</span>.
@@ -526,7 +527,8 @@ function HeroSection() {
       <div
         className="mockup-float-container"
         style={{
-          marginTop: "72px", width: "100%", maxWidth: "960px",
+          marginTop: "clamp(40px, 6vw, 72px)", width: "100%", maxWidth: "960px",
+          padding: "0 clamp(0px, 2vw, 16px)",
           opacity: visible ? 1 : 0,
           transform: visible ? "translateY(0) scale(1)" : "translateY(50px) scale(0.97)",
           transition: "opacity 1.2s cubic-bezier(0.33, 1, 0.68, 1) 0.7s, transform 1.6s cubic-bezier(0.33, 1, 0.68, 1) 0.7s",
@@ -745,7 +747,7 @@ function SearchCategoryAnimation() {
   }, [categories.length])
 
   return (
-    <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+    <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
       {/* Animated search icon */}
       <div style={{
         width: "36px", height: "36px", borderRadius: "10px",
@@ -919,10 +921,11 @@ function ShowcaseSection() {
         style={{
           position: "sticky",
           top: 0,
-          height: "100vh",
+          height: "100dvh",
           display: "flex",
           alignItems: "center",
           paddingTop: 0,
+          overflow: "hidden",
           opacity: entered ? 1 : 0,
           transform: entered ? "translateY(0)" : "translateY(24px)",
           transition: "opacity 0.6s cubic-bezier(0.33,1,0.68,1), transform 0.8s cubic-bezier(0.33,1,0.68,1)",
@@ -1084,7 +1087,8 @@ function TestimonialsSection() {
   return (
     <section id="testimonials" ref={ref} className="section" style={{ overflow: "hidden", paddingLeft: 0, paddingRight: 0 }}>
       <div style={{
-        textAlign: "center", marginBottom: "64px",
+        textAlign: "center", marginBottom: "clamp(40px, 6vw, 64px)",
+        padding: "0 clamp(16px, 4vw, 32px)",
         opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(24px)",
         transition: "opacity 1.0s cubic-bezier(0.33, 1, 0.68, 1), transform 1.2s cubic-bezier(0.33, 1, 0.68, 1)",
       }}>
@@ -1113,7 +1117,7 @@ function TestimonialsSection() {
         >
           {marqueeItems.map((t, i) => (
             <TiltCard key={i} className="testimonial-card" style={{
-              width: "clamp(300px, 32vw, 380px)",
+              width: "clamp(280px, 30vw, 380px)",
               flexShrink: 0,
               opacity: visible ? 1 : 0,
               transform: visible ? "scale(1)" : "scale(0.95)",
@@ -1182,7 +1186,7 @@ function DownloadSection() {
         transform: visible ? "translateY(0) scale(1)" : "translateY(24px) scale(0.97)",
         transition: "opacity 1.0s cubic-bezier(0.33, 1, 0.68, 1) 0.1s, transform 1.3s cubic-bezier(0.33, 1, 0.68, 1) 0.1s",
       }}>
-        <a href="https://github.com/Jnani-Smart/Clippy/releases/download/v1.9.0/Clippy.app.zip" className="btn-dark" style={{ padding: "22px 48px", fontSize: "18px" }}>
+        <a href="https://github.com/Jnani-Smart/Clippy/releases/download/v1.9.0/Clippy.app.zip" className="btn-dark" style={{ padding: "clamp(16px, 3vw, 22px) clamp(32px, 6vw, 48px)", fontSize: "clamp(16px, 2vw, 18px)" }}>
           {I.apple(20)}
           Download for Mac
         </a>

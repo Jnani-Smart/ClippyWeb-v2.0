@@ -963,13 +963,31 @@ body {
 
 .showcase-morph-dots {
   position: absolute;
-  bottom: clamp(24px, 4vh, 48px);
+  bottom: clamp(16px, 4vh, 48px);
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   gap: 8px;
   align-items: center;
   z-index: 10;
+}
+
+/* ─── Search category pills responsive ─── */
+.search-category-wrapper {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .search-category-wrapper {
+    gap: 8px;
+  }
+  .search-category-wrapper .category-pill {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -980,8 +998,9 @@ body {
 .showcase-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 48px;
+  gap: clamp(24px, 4vw, 48px);
   align-items: center;
+  padding: 0 clamp(16px, 4vw, 32px);
 }
 
 /* ─── Tablet (≤1024px) ─── */
@@ -1000,11 +1019,12 @@ body {
   .showcase-grid {
     grid-template-columns: 1fr !important;
     gap: 24px;
+    padding: 0 16px;
   }
 
   .showcase-morph-sticky {
-    padding-left: 16px !important;
-    padding-right: 16px !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
   }
 
   .showcase-morph-dots {
@@ -1030,6 +1050,10 @@ body {
     font-size: 48px;
     top: 14px;
     left: 20px;
+  }
+
+  .mockup-container {
+    border-radius: var(--radius-lg);
   }
 }
 
@@ -1097,16 +1121,34 @@ body {
 /* ─── Very small screens (≤375px) — iPhone SE, etc. ─── */
 @media (max-width: 375px) {
   .text-hero {
-    font-size: clamp(32px, 10vw, 52px);
+    font-size: clamp(30px, 10vw, 48px);
+  }
+
+  .text-headline {
+    font-size: clamp(24px, 7vw, 36px);
   }
 
   .section,
   .section-wide {
-    padding: 48px 16px;
+    padding: 40px 14px;
   }
 
   .grid-features {
     gap: 28px;
+  }
+
+  .btn-dark,
+  .btn-frosted {
+    padding: 12px 20px;
+    font-size: 14px;
+  }
+
+  .glass-warm {
+    border-radius: 18px;
+  }
+
+  .showcase-grid {
+    padding: 0 14px;
   }
 }
 

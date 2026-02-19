@@ -46,9 +46,22 @@ export function LiquidGlassDock({
     const effectRef = useRef<HTMLDivElement>(null)
     const filterRef = useRef<SVGSVGElement>(null)
     const [ready, setReady] = useState(false)
+    const [dockScale, setDockScale] = useState(1)
     const draggableInstanceRef = useRef<any[]>([])
 
-    const dockWidth = 96 + icons.length * 72
+    const baseDockWidth = 96 + icons.length * 72
+
+    // Compute responsive scale so dock fits within viewport
+    const computeScale = () => {
+        if (typeof window === "undefined") return 1
+        const maxWidth = window.innerWidth - 32 // 16px margin each side
+        if (baseDockWidth > maxWidth) {
+            return Math.max(0.5, maxWidth / baseDockWidth)
+        }
+        return 1
+    }
+
+    const dockWidth = baseDockWidth
 
     // Build SVG displacement map image
     const buildDisplacementDataUri = () => {
@@ -94,6 +107,10 @@ export function LiquidGlassDock({
                 const config = DOCK_CONFIG
                 const width = dockWidth
 
+                // Compute initial scale
+                const scale = computeScale()
+                setDockScale(scale)
+
                 // Set the displacement image on SVG feImage
                 const dataUri = buildDisplacementDataUri()
                 const feImages = filterRef.current.querySelectorAll("feImage")
@@ -102,9 +119,10 @@ export function LiquidGlassDock({
                 // Position the dock initially using top/left (NOT transforms)
                 const vw = window.innerWidth
                 const vh = window.innerHeight
+                const scaledWidth = width * scale
                 gsap.set(el, {
-                    top: position === "bottom" ? vh - config.height - 40 : 40,
-                    left: (vw - width) / 2,
+                    top: position === "bottom" ? vh - config.height * scale - 24 : 24,
+                    left: (vw - scaledWidth) / 2,
                     opacity: 0,
                 })
 
@@ -142,13 +160,15 @@ export function LiquidGlassDock({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
-    // Re-center on resize (debounced)
+    // Re-center and rescale on resize (debounced)
     useEffect(() => {
         let timer: ReturnType<typeof setTimeout>
         const handleResize = () => {
             clearTimeout(timer)
             timer = setTimeout(() => {
                 if (!effectRef.current) return
+                const newScale = computeScale()
+                setDockScale(newScale)
                 draggableInstanceRef.current.forEach((d: any) => {
                     if (d) d.update()
                 })
@@ -174,6 +194,8 @@ export function LiquidGlassDock({
                 height: `${config.height}px`,
                 borderRadius: `${config.radius}px`,
                 opacity: 0,
+                transform: `scale(${dockScale})`,
+                transformOrigin: "center bottom",
                 // Glass background
                 background: `hsl(0 0% 100% / ${config.frost})`,
                 backdropFilter: `url(#dock-filter) brightness(1.1) saturate(${config.saturation})`,

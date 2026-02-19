@@ -213,9 +213,9 @@ export function LiquidGlassHeader({
     return (
         <>
             <div style={{
-                position: "fixed", top: "max(16px, env(safe-area-inset-top, 16px))", left: 0, right: 0, zIndex: 999998,
+                position: "fixed", top: "max(12px, env(safe-area-inset-top, 12px))", left: 0, right: 0, zIndex: 999998,
                 display: "flex", alignItems: "center", justifyContent: "space-between",
-                padding: "0 max(24px, env(safe-area-inset-left, 24px))", pointerEvents: "none", gap: "12px",
+                padding: "0 max(16px, env(safe-area-inset-left, 16px))", pointerEvents: "none", gap: "10px",
             }}>
                 {/* ══ LEFT GROUP: Logo pill + Title pill ══ */}
                 <div style={{ display: "flex", alignItems: "center", gap: "10px", pointerEvents: "auto" }}>
@@ -254,8 +254,7 @@ export function LiquidGlassHeader({
                     </div>
 
                     {/* ── TITLE + BADGE PILL ── */}
-                    <div ref={leftRef}
-                        onPointerDown={() => { setPressed("title"); pressStart.current = Date.now() }}
+                    <div ref={leftRef}                        className="header-title-pill"                        onPointerDown={() => { setPressed("title"); pressStart.current = Date.now() }}
                         onPointerUp={() => {
                             const duration = Date.now() - pressStart.current
                             if (duration < 150) setTimeout(() => setPressed(null), 150 - duration)
@@ -410,7 +409,7 @@ export function LiquidGlassHeader({
             {/* ══ MOBILE NAV DROPDOWN ══ */}
             {mobileOpen && (
                 <div ref={mobileMenuRef} style={{
-                    position: "fixed", top: `${16 + GLASS.height + 12}px`, left: "max(16px, env(safe-area-inset-left, 16px))", right: "max(16px, env(safe-area-inset-right, 16px))",
+                    position: "fixed", top: `${12 + GLASS.height + 10}px`, left: "max(12px, env(safe-area-inset-left, 12px))", right: "max(12px, env(safe-area-inset-right, 12px))",
                     zIndex: 999997,
                     ...pillStyle(scrolled),
                     height: "auto", borderRadius: "20px", padding: "12px 8px",
@@ -453,6 +452,9 @@ export function LiquidGlassHeader({
                 @media (max-width: 768px) {
                     .header-nav-desktop { display: none !important; }
                     .header-hamburger { display: flex !important; }
+                }
+                @media (max-width: 380px) {
+                    .header-title-pill { display: none !important; }
                 }
             `}</style>
         </>
