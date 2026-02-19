@@ -96,6 +96,20 @@ export default function RootLayout({
           href="https://fonts.gstatic.com"
           crossOrigin="anonymous"
         />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function () {
+                if (!('serviceWorker' in navigator)) return;
+                window.addEventListener('load', function () {
+                  navigator.serviceWorker.getRegistrations().then(function (regs) {
+                    regs.forEach(function (reg) { reg.unregister(); });
+                  }).catch(function () {});
+                });
+              })();
+            `,
+          }}
+        />
       </head>
       <body className={`${geistSans.variable} antialiased`}>
         {children}
