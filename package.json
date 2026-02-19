@@ -2,7 +2,7 @@
   "name": "clippy-web",
   "version": "2.0.0",
   "private": true,
-  "description": "Clippy Web — Interactive liquid glass hero with draggable dock",
+  "description": "Clippy Web — Premium landing page for the Clippy macOS clipboard manager",
   "author": "Jnani Smart",
   "license": "MIT",
   "scripts": {

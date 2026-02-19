@@ -126,6 +126,8 @@ export function LiquidGlassHeader({
     const navRef = useRef<HTMLElement>(null)
     const mobileMenuRef = useRef<HTMLDivElement>(null)
     const mobileFilterRef = useRef<SVGSVGElement>(null)
+    const hamburgerRef = useRef<HTMLButtonElement>(null)
+    const hamburgerSvgRef = useRef<SVGSVGElement>(null)
     const pressStart = useRef<number>(0)
 
     // Shorten version: "v1.9.0" → "v1.9", "1.9.0" → "v1.9"
@@ -162,6 +164,11 @@ export function LiquidGlassHeader({
             const w = mobileMenuRef.current.getBoundingClientRect().width
             mobileFilterRef.current.querySelectorAll("feImage")
                 .forEach((img) => img.setAttribute("href", buildDisplacementUri(w, "hdr-m")))
+        }
+        if (hamburgerRef.current && hamburgerSvgRef.current) {
+            const w = hamburgerRef.current.getBoundingClientRect().width
+            hamburgerSvgRef.current.querySelectorAll("feImage")
+                .forEach((img) => img.setAttribute("href", buildDisplacementUri(w, "hdr-h")))
         }
     }, [])
 
@@ -361,7 +368,12 @@ export function LiquidGlassHeader({
                                         fontSize: "15px", fontWeight: 600, letterSpacing: "-0.01em",
                                         color: isDownload ? "#ffffff" : (hovered === i ? "rgba(29,29,31,0.95)" : "rgba(29,29,31,0.6)"),
                                         fontFamily: '"SF Pro Display", "SF Pro Text", "SF Pro", -apple-system, BlinkMacSystemFont, sans-serif',
-                                        textDecoration: "none", padding: "14.5px 24px",
+                                        textDecoration: "none",
+                                        padding: "14.5px",
+                                        minWidth: "132px",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
                                         borderRadius: "22px",
                                         background: isDownload ? "#1C1C1E" : "transparent",
                                         transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
@@ -382,12 +394,12 @@ export function LiquidGlassHeader({
                 </div>
 
                 {/* ══ HAMBURGER (mobile) ══ */}
-                <button className="header-hamburger" onClick={() => setMobileOpen(!mobileOpen)} aria-label={mobileOpen ? "Close navigation menu" : "Open navigation menu"} style={{
+                <button ref={hamburgerRef} className="header-hamburger" onClick={() => setMobileOpen(!mobileOpen)} aria-label={mobileOpen ? "Close navigation menu" : "Open navigation menu"} style={{
                     ...pillStyle(scrolled),
                     width: `${GLASS.height}px`, display: "none", alignItems: "center", justifyContent: "center",
-                    opacity: ready ? 1 : 0, pointerEvents: "auto", border: "none", cursor: "pointer",
-                    backdropFilter: `brightness(1.12) saturate(${c.saturation}) blur(40px)`,
-                    WebkitBackdropFilter: `brightness(1.12) saturate(${c.saturation}) blur(40px)`,
+                    opacity: ready ? 1 : 0, pointerEvents: "auto", border: "none", cursor: "pointer", padding: 0,
+                    backdropFilter: `url(#hdr-h) brightness(1.12) saturate(${c.saturation})`,
+                    WebkitBackdropFilter: `url(#hdr-h) brightness(1.12) saturate(${c.saturation})`,
                 }}>
                     <div style={{ width: "18px", display: "flex", flexDirection: "column", gap: mobileOpen ? "0px" : "5px", alignItems: "center", transition: "gap 0.3s ease" }}>
                         <span style={{
@@ -404,6 +416,7 @@ export function LiquidGlassHeader({
                         }} />
                     </div>
                     <Specular />
+                    <GlassFilter id="hdr-h" svgRef={hamburgerSvgRef} />
                 </button>
             </div>
 

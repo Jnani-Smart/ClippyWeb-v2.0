@@ -1,22 +1,22 @@
 # Clippy Web v2.0
 
-An interactive web application featuring a liquid glass hero section with a draggable macOS-style dock.
+A premium, interactive web application for Clippy — the lightweight clipboard manager for macOS.
 
 ## Features
 
-- **Liquid Background** — Full-screen interactive liquid distortion effect powered by Three.js
-- **Glass Dock** — macOS-inspired floating dock with SVG displacement filters and chromatic aberration
-- **Draggable** — The glass dock is freely draggable anywhere on the screen via GSAP
-- **Responsive** — Adapts smoothly to any viewport size
+- **Liquid Glass Header** — Adaptive, high-fidelity header with custom SVG displacement filters.
+- **Micro-Animations** — Buttery smooth interactions and scroll-triggered transitions.
+- **Dynamic Downloads** — Intelligent server-side proxy for the latest app releases.
+- **Responsive** — Optimized for all devices with a mobile-first philosophy.
 
 ## Tech Stack
 
-- **Next.js 16** — React framework
-- **TypeScript** — Type safety
-- **GSAP** — Animation and drag interactions
-- **Tailwind CSS 4** — Utility-first styling
-- **Three.js** — WebGL liquid background effect
-- **SVG Filters** — Displacement maps for glass distortion
+- **Next.js 15** — Modern React framework
+- **TypeScript** — Strict type safety
+- **GSAP** — High-performance animation engine
+- **Tailwind CSS 4** — Next-generation styling
+- **SVG Filters** — Custom chromatic aberration and glass distortion
+- **Framer Motion** — Fluid layout animations
 
 ## Getting Started
 
