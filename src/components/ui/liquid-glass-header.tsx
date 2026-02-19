@@ -131,6 +131,7 @@ export function LiquidGlassHeader({
     const [highlight, setHighlight] = useState<{ x: number; w: number; h: number } | null>(null)
     const [scrolled, setScrolled] = useState(false)
     const [mobileOpen, setMobileOpen] = useState(false)
+    const [mobileMenuPos, setMobileMenuPos] = useState<{ top: number; left: number; width: number } | null>(null)
     const navRef = useRef<HTMLElement>(null)
     const mobileMenuRef = useRef<HTMLDivElement>(null)
     const mobileFilterRef = useRef<SVGSVGElement>(null)
@@ -211,6 +212,47 @@ export function LiquidGlassHeader({
             window.removeEventListener("resize", fn)
         }
     }, [applyMaps])
+
+    const updateMobileMenuPosition = useCallback(() => {
+        const trigger = hamburgerRef.current
+        if (!trigger) return
+
+        const rect = trigger.getBoundingClientRect()
+        const sideMargin = 12
+        const maxMenuWidth = 560
+        const viewportWidth = window.innerWidth
+        const menuWidth = Math.min(maxMenuWidth, viewportWidth - sideMargin * 2)
+        const centeredLeft = (viewportWidth - menuWidth) / 2
+        const menuTop = rect.bottom + 10
+
+        setMobileMenuPos({
+            top: menuTop,
+            left: Math.max(sideMargin, centeredLeft),
+            width: menuWidth,
+        })
+    }, [])
+
+    useEffect(() => {
+        if (!mobileOpen) {
+            setMobileMenuPos(null)
+            return
+        }
+
+        const update = () => updateMobileMenuPosition()
+        update()
+        const raf = requestAnimationFrame(() => {
+            update()
+            applyMaps()
+        })
+
+        window.addEventListener("resize", update, { passive: true })
+        window.addEventListener("scroll", update, { passive: true })
+        return () => {
+            cancelAnimationFrame(raf)
+            window.removeEventListener("resize", update)
+            window.removeEventListener("scroll", update)
+        }
+    }, [mobileOpen, updateMobileMenuPosition, applyMaps])
 
     // Smooth-scroll nav links with centering and prevent default anchor jump
     const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href?: string) => {
@@ -434,8 +476,11 @@ export function LiquidGlassHeader({
             {/* ══ MOBILE NAV DROPDOWN ══ */}
             {mobileOpen && (
                 <div ref={mobileMenuRef} style={{
-                    position: "fixed", top: `${12 + GLASS.height + 10}px`, left: "max(12px, env(safe-area-inset-left, 12px))", right: "max(12px, env(safe-area-inset-right, 12px))",
-                    zIndex: 999997,
+                    position: "fixed",
+                    top: mobileMenuPos ? `${mobileMenuPos.top}px` : `${12 + GLASS.height + 10}px`,
+                    left: mobileMenuPos ? `${mobileMenuPos.left}px` : "max(12px, env(safe-area-inset-left, 12px))",
+                    width: mobileMenuPos ? `${mobileMenuPos.width}px` : "calc(100vw - 24px)",
+                    zIndex: 999999,
                     ...pillStyle(scrolled),
                     height: "auto", borderRadius: "20px", padding: "12px 8px",
                     backdropFilter: `url(#hdr-m) brightness(1.12) saturate(${c.saturation}) blur(60px)`,
