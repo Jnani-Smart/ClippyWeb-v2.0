@@ -38,6 +38,14 @@ const GLASS = {
     displace: 0.18,
 }
 
+const DESKTOP_NAV = {
+    outerPadX: 7,
+    itemHeight: GLASS.height - 16,
+    itemPadX: 14,
+    downloadPadX: 15,
+    downloadMinWidth: 116,
+}
+
 function buildDisplacementUri(width: number, id: string) {
     const c = GLASS
     const h = c.height
@@ -297,14 +305,14 @@ export function LiquidGlassHeader({
                 {/* ══ RIGHT PILL: Nav (desktop) ══ */}
                 <div ref={rightRef} className="header-nav-desktop" style={{
                     ...pillStyle(scrolled),
-                    display: "flex", alignItems: "center", padding: "0 8px",
+                    display: "flex", alignItems: "center", padding: `0 ${DESKTOP_NAV.outerPadX}px`,
                     opacity: ready ? 1 : 0, pointerEvents: "auto", flexShrink: 0,
                     backdropFilter: `url(#hdr-r) brightness(1.12) saturate(${c.saturation})`,
                     WebkitBackdropFilter: `url(#hdr-r) brightness(1.12) saturate(${c.saturation})`,
                     transition: "transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.65s ease",
                 }}>
                     <nav ref={navRef} style={{
-                        display: "flex", alignItems: "center", gap: "2px",
+                        display: "flex", alignItems: "center", gap: "1px",
                         opacity: 1, transition: "opacity 0.4s ease-out",
                         position: "relative",
                     }}
@@ -318,7 +326,7 @@ export function LiquidGlassHeader({
                             height: highlight ? `${highlight.h}px` : "0px",
                             transform: highlight ? `translateX(${highlight.x}px)` : "translateX(0)",
                             background: "rgba(0,0,0,0.055)",
-                            borderRadius: "22px",
+                            borderRadius: `${DESKTOP_NAV.itemHeight / 2}px`,
                             transition: hovered !== null
                                 ? "transform 0.32s cubic-bezier(.4,0,.2,1), width 0.32s cubic-bezier(.4,0,.2,1), height 0.32s cubic-bezier(.4,0,.2,1), opacity 0.2s ease"
                                 : "opacity 0.2s ease",
@@ -328,6 +336,8 @@ export function LiquidGlassHeader({
                         }} />
                         {sections.map((s, i) => {
                             const isDownload = s.label === "Get App";
+                            const itemPadX = isDownload ? DESKTOP_NAV.downloadPadX : DESKTOP_NAV.itemPadX
+                            const itemMinWidth = isDownload ? `${DESKTOP_NAV.downloadMinWidth}px` : "auto"
                             return (
                                 <a key={i} href={s.href || "#"}
                                     onClick={(e) => handleNavClick(e, s.href)}
@@ -369,17 +379,18 @@ export function LiquidGlassHeader({
                                         color: isDownload ? "#ffffff" : (hovered === i ? "rgba(29,29,31,0.95)" : "rgba(29,29,31,0.6)"),
                                         fontFamily: '"SF Pro Display", "SF Pro Text", "SF Pro", -apple-system, BlinkMacSystemFont, sans-serif',
                                         textDecoration: "none",
-                                        padding: "14.5px",
-                                        minWidth: "132px",
+                                        height: `${DESKTOP_NAV.itemHeight}px`,
+                                        padding: `0 ${itemPadX}px`,
+                                        minWidth: itemMinWidth,
                                         display: "flex",
                                         alignItems: "center",
                                         justifyContent: "center",
-                                        borderRadius: "22px",
+                                        borderRadius: `${DESKTOP_NAV.itemHeight / 2}px`,
                                         background: isDownload ? "#1C1C1E" : "transparent",
                                         transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
                                         transform: pressed === i
                                             ? "scale(0.95)"
-                                            : (isDownload && hovered === i ? "scale(1.04)" : "scale(1)"),
+                                            : (isDownload && hovered === i ? "scale(1.02)" : "scale(1)"),
                                         cursor: "pointer", whiteSpace: "nowrap", lineHeight: 1,
                                         position: "relative", zIndex: 1,
                                         boxShadow: isDownload && (hovered === i && pressed !== i) ? "0 8px 16px -4px rgba(0,0,0,0.2)" : "none",
