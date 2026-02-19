@@ -1107,6 +1107,12 @@ body {
     justify-content: center;
   }
 
+  .hero-github-mobile-match {
+    width: auto !important;
+    flex: 0 0 auto;
+    padding: 14px 28px !important;
+  }
+
   .grid-features {
     gap: 32px 20px;
   }
@@ -1164,6 +1170,10 @@ body {
   .btn-frosted {
     padding: 12px 20px;
     font-size: 14px;
+  }
+
+  .hero-github-mobile-match {
+    padding: 14px 28px !important;
   }
 
   .glass-warm {

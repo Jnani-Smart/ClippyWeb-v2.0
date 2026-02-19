@@ -583,6 +583,9 @@ function AnimatedButton({ href, className = "", children, style = {}, target, re
         ...style,
         transform: pressed ? "scale(0.95)" : (hovered ? "translateY(-2px) scale(1.02)" : "translateY(0) scale(1)"),
         transition: "transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
+        width: "auto",
+        flex: "0 0 auto",
+        padding: "14px 28px",
       }}
     >
       {children}
@@ -648,7 +651,7 @@ function HeroSection() {
         transition: "opacity 1.0s cubic-bezier(0.33, 1, 0.68, 1) 0.5s, transform 1.2s cubic-bezier(0.33, 1, 0.68, 1) 0.5s",
       }}>
         <MorphingDownloadButton href="/download/latest" className="btn-dark" iconSize={18} />
-        <AnimatedButton href="https://github.com/Jnani-Smart/Clippy" target="_blank" rel="noopener noreferrer" className="btn-frosted">
+        <AnimatedButton href="https://github.com/Jnani-Smart/Clippy" target="_blank" rel="noopener noreferrer" className="btn-frosted hero-github-mobile-match">
           {I.github(18)}
           View on GitHub
         </AnimatedButton>
