@@ -699,7 +699,7 @@ function FeatureItem({ icon, label, accent, visible, index }: { icon: (s?: numbe
   // Stagger: 100ms between items, with a gentle ease-out for a wave-like entrance
   const staggerDelay = 0.08 + index * 0.1
   return (
-    <div style={{
+    <div className="feature-bento-card" style={{
       opacity: visible ? 1 : 0,
       transform: visible ? "translateY(0) scale(1)" : "translateY(36px) scale(0.97)",
       transition: `opacity 0.9s cubic-bezier(0.33, 1, 0.68, 1) ${staggerDelay}s, transform 1.1s cubic-bezier(0.33, 1, 0.68, 1) ${staggerDelay}s`,
