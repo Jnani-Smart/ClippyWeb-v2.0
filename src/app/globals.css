@@ -979,6 +979,12 @@ body {
 
 .showcase-morph-sticky {
   will-change: opacity, transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.showcase-stage {
+  contain: paint;
 }
 
 .showcase-morph-dots {
@@ -1024,10 +1030,42 @@ body {
   padding: 0 clamp(16px, 4vw, 32px);
 }
 
+.showcase-copy,
+.showcase-visual {
+  position: relative;
+}
+
+.showcase-copy {
+  min-height: 260px;
+}
+
+.showcase-visual {
+  min-height: 280px;
+}
+
+.showcase-slide,
+.showcase-card-layer {
+  transform-origin: center center;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.showcase-card-layer .glass-warm {
+  width: 100%;
+}
+
 /* ─── Tablet (≤1024px) ─── */
 @media (max-width: 1024px) {
   .showcase-grid {
     gap: 36px;
+  }
+
+  .showcase-copy {
+    min-height: 260px;
+  }
+
+  .showcase-visual {
+    min-height: 280px;
   }
 
   .testimonial-card {
@@ -1041,6 +1079,7 @@ body {
     grid-template-columns: 1fr !important;
     gap: 24px;
     padding: 0 16px;
+    align-content: start;
   }
 
   .showcase-morph-sticky {
@@ -1049,7 +1088,15 @@ body {
   }
 
   .showcase-morph-dots {
-    bottom: 16px;
+    bottom: calc(12px + env(safe-area-inset-bottom));
+  }
+
+  .showcase-copy {
+    min-height: 260px;
+  }
+
+  .showcase-visual {
+    min-height: 260px;
   }
 
   /* Reverse order for card-2 so text comes first on mobile */

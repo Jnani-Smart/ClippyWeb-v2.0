@@ -177,6 +177,32 @@ function useInView<T extends HTMLElement = HTMLElement>(threshold = 0.2) {
   return { ref, visible }
 }
 
+const clamp01 = (value: number) => Math.min(1, Math.max(0, value))
+
+function useMediaQuery(query: string) {
+  const [matches, setMatches] = useState(() => {
+    if (typeof window === "undefined") return false
+    return window.matchMedia(query).matches
+  })
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    const media = window.matchMedia(query)
+    const handleChange = () => setMatches(media.matches)
+    handleChange()
+
+    if (typeof media.addEventListener === "function") {
+      media.addEventListener("change", handleChange)
+      return () => media.removeEventListener("change", handleChange)
+    }
+
+    media.addListener(handleChange)
+    return () => media.removeListener(handleChange)
+  }, [query])
+
+  return matches
+}
+
 /* ═══════════════════════════════════════════════════════════════
    ANIMATED HIGHLIGHT — pink sweep that slides in on scroll
    ═══════════════════════════════════════════════════════════════ */
@@ -837,7 +863,7 @@ function SearchCategoryAnimation() {
   }, [categories.length])
 
   return (
-    <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+    <div className="search-category-wrapper" style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
       {/* Animated search icon */}
       <div style={{
         width: "36px", height: "36px", borderRadius: "10px",
@@ -856,6 +882,7 @@ function SearchCategoryAnimation() {
       {categories.map((cat, i) => (
         <div
           key={i}
+          className="category-pill"
           style={{
             display: "flex", alignItems: "center", gap: "6px",
             padding: "6px 12px", borderRadius: "100px",
@@ -878,75 +905,164 @@ function SearchCategoryAnimation() {
 
 function ShowcaseSection() {
   const containerRef = useRef<HTMLDivElement>(null)
+  const targetProgressRef = useRef(0)
+  const smoothProgressRef = useRef(0)
+  const progressRafRef = useRef<number | null>(null)
+  const scrollRafRef = useRef<number | null>(null)
+  const metricsRef = useRef({ start: 0, end: 0, scrollable: 1 })
+  const hasEnteredRef = useRef(false)
+  const stickyActivatedRef = useRef(false)
+
   const [progress, setProgress] = useState(0)
   const [entered, setEntered] = useState(false)
   const [stickyActive, setStickyActive] = useState(false)
 
+  const isCompactLayout = useMediaQuery("(max-width: 960px)")
+  const isTightViewport = useMediaQuery("(max-width: 540px), (max-height: 700px)")
+  const prefersReducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)")
+
   // Slides data — animations are driven by activeIndex
   const totalSlides = 3
   const segmentSize = 1 / totalSlides
+
+  const galleryHeight = useMemo(() => {
+    if (isCompactLayout && isTightViewport) return "320vh"
+    if (isCompactLayout) return "290vh"
+    return "250vh"
+  }, [isCompactLayout, isTightViewport])
+
+  const animateProgress = useCallback(() => {
+    const step = () => {
+      const target = targetProgressRef.current
+      const current = smoothProgressRef.current
+      const smoothing = prefersReducedMotion ? 1 : 0.16
+      const next = current + (target - current) * smoothing
+
+      smoothProgressRef.current = next
+      setProgress(next)
+
+      if (Math.abs(target - next) < 0.0008) {
+        smoothProgressRef.current = target
+        setProgress(target)
+        progressRafRef.current = null
+        return
+      }
+
+      progressRafRef.current = requestAnimationFrame(step)
+    }
+
+    step()
+  }, [prefersReducedMotion])
+
+  const queueProgress = useCallback((next: number) => {
+    targetProgressRef.current = clamp01(next)
+    if (progressRafRef.current === null) {
+      animateProgress()
+    }
+  }, [animateProgress])
 
   // Scroll-driven progress: 0 → 1 across the tall container
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
 
-    let ticking = false
-    const onScroll = () => {
-      if (ticking) return
-      ticking = true
-      requestAnimationFrame(() => {
-        const rect = container.getBoundingClientRect()
-        const containerH = container.offsetHeight
-        const viewH = window.innerHeight
-        const scrolled = -rect.top
-        const scrollable = containerH - viewH
-        const p = Math.max(0, Math.min(1, scrolled / scrollable))
-        setProgress(p)
-        if (rect.top < viewH && rect.bottom > 0) setEntered(true)
-        // Mark sticky as active once the container top reaches viewport top
-        if (rect.top <= 0 && !stickyActive) setStickyActive(true)
-        ticking = false
-      })
+    const computeMetrics = () => {
+      const rect = container.getBoundingClientRect()
+      const start = rect.top + window.scrollY
+      const height = container.offsetHeight
+      metricsRef.current = {
+        start,
+        end: start + height,
+        scrollable: Math.max(1, height - window.innerHeight),
+      }
     }
 
-    window.addEventListener("scroll", onScroll, { passive: true })
-    onScroll()
-    return () => window.removeEventListener("scroll", onScroll)
-  }, [stickyActive])
+    const updateProgressFromScroll = () => {
+      scrollRafRef.current = null
+      const y = window.scrollY
+      const { start, end, scrollable } = metricsRef.current
+      const nextProgress = (y - start) / scrollable
+      queueProgress(nextProgress)
 
-  const activeIndex = Math.min(totalSlides - 1, Math.floor(progress * totalSlides))
+      if (!hasEnteredRef.current && y + window.innerHeight > start && y < end) {
+        hasEnteredRef.current = true
+        setEntered(true)
+      }
+
+      if (!stickyActivatedRef.current && y >= start) {
+        stickyActivatedRef.current = true
+        setStickyActive(true)
+      }
+    }
+
+    const requestUpdate = () => {
+      if (scrollRafRef.current !== null) return
+      scrollRafRef.current = requestAnimationFrame(updateProgressFromScroll)
+    }
+
+    const onResize = () => {
+      computeMetrics()
+      requestUpdate()
+    }
+
+    computeMetrics()
+    requestUpdate()
+
+    window.addEventListener("scroll", requestUpdate, { passive: true })
+    window.addEventListener("resize", onResize)
+    window.addEventListener("orientationchange", onResize)
+
+    return () => {
+      window.removeEventListener("scroll", requestUpdate)
+      window.removeEventListener("resize", onResize)
+      window.removeEventListener("orientationchange", onResize)
+      if (scrollRafRef.current !== null) cancelAnimationFrame(scrollRafRef.current)
+      if (progressRafRef.current !== null) cancelAnimationFrame(progressRafRef.current)
+    }
+  }, [queueProgress])
+
+  const activeIndex = Math.min(totalSlides - 1, Math.floor(clamp01(progress) * totalSlides))
 
   // Smoothstep for buttery easing
-  const smoothstep = (t: number) => t * t * (3 - 2 * t)
+  const smoothstep = useCallback((t: number) => {
+    const x = clamp01(t)
+    return x * x * (3 - 2 * x)
+  }, [])
 
   const getSlideOpacity = useCallback((index: number) => {
+    const current = clamp01(progress)
     const slideStart = index * segmentSize
     const slideEnd = (index + 1) * segmentSize
     const fadeZone = segmentSize * 0.3
 
-    if (progress >= slideStart && progress <= slideEnd) {
-      if (progress < slideStart + fadeZone && index > 0) {
-        return smoothstep((progress - slideStart) / fadeZone)
+    if (current >= slideStart && current <= slideEnd) {
+      if (current < slideStart + fadeZone && index > 0) {
+        return smoothstep((current - slideStart) / fadeZone)
       }
-      if (progress > slideEnd - fadeZone && index < totalSlides - 1) {
-        return smoothstep((slideEnd - progress) / fadeZone)
+      if (current > slideEnd - fadeZone && index < totalSlides - 1) {
+        return smoothstep((slideEnd - current) / fadeZone)
       }
       return 1
     }
     return 0
-  }, [progress, segmentSize, totalSlides]) // Added totalSlides to dependencies
+  }, [progress, segmentSize, totalSlides, smoothstep])
 
   const getSlideTransform = useCallback((index: number) => {
     const opacity = getSlideOpacity(index)
-    if (opacity <= 0) return "translateY(16px)"
-    if (opacity >= 1) return "translateY(0)"
+    if (opacity <= 0) return "translate3d(0, 16px, 0)"
+    if (opacity >= 1) return "translate3d(0, 0, 0)"
+    const current = clamp01(progress)
     const slideCenter = (index + 0.5) * segmentSize
     const dist = (1 - opacity) * 16
-    return progress < slideCenter
-      ? `translateY(${dist}px)`
-      : `translateY(${-dist}px)`
+    return current < slideCenter
+      ? `translate3d(0, ${dist}px, 0)`
+      : `translate3d(0, ${-dist}px, 0)`
   }, [progress, getSlideOpacity, segmentSize])
+
+  const getCardTransform = useCallback((index: number) => {
+    const opacity = getSlideOpacity(index)
+    return `scale(${0.96 + opacity * 0.04})`
+  }, [getSlideOpacity])
 
   // Build slides with morph-aware animation components
   const slides = useMemo(() => [
@@ -1004,17 +1120,18 @@ function ShowcaseSection() {
     <div
       id="gallery"
       ref={containerRef}
-      style={{ height: "250vh", position: "relative" }}
+      style={{ height: galleryHeight, position: "relative" }}
     >
       <div
-        className="section-wide showcase-morph-sticky"
+        className="section-wide showcase-morph-sticky showcase-stage"
         style={{
           position: "sticky",
-          top: 0,
-          height: "100dvh",
+          top: isCompactLayout ? "max(0px, env(safe-area-inset-top))" : "0px",
+          height: isCompactLayout ? "100svh" : "100dvh",
           display: "flex",
-          alignItems: "center",
-          paddingTop: 0,
+          alignItems: isCompactLayout ? "flex-start" : "center",
+          paddingTop: isCompactLayout ? "clamp(84px, 12vh, 120px)" : 0,
+          paddingBottom: isCompactLayout ? "clamp(72px, 12vh, 112px)" : 0,
           overflow: "hidden",
           opacity: entered ? 1 : 0,
           transform: entered ? "translateY(0)" : "translateY(24px)",
@@ -1023,13 +1140,14 @@ function ShowcaseSection() {
       >
         <div className="showcase-grid" style={{ width: "100%" }}>
           {/* Left: Text content */}
-          <div style={{ position: "relative", minHeight: "260px" }}>
+          <div className="showcase-copy">
             {slides.map((slide, i) => {
               const opacity = getSlideOpacity(i)
               const isActive = stickyActive && activeIndex === i && opacity > 0.5 && (i !== 0 || progress > 0.05)
               return (
                 <div
                   key={i}
+                  className="showcase-slide"
                   style={{
                     position: i === 0 ? "relative" : "absolute",
                     top: 0, left: 0, width: "100%",
@@ -1053,42 +1171,48 @@ function ShowcaseSection() {
           </div>
 
           {/* Right: Image card */}
-          <div style={{ position: "relative", minHeight: "280px" }}>
+          <div className="showcase-visual">
             {slides.map((slide, i) => {
               const opacity = getSlideOpacity(i)
               return (
-                <TiltCard
+                <div
                   key={i}
-                  className="glass-warm"
+                  className="showcase-card-layer"
                   style={{
-                    padding: "clamp(20px, 3vw, 32px)",
-                    minHeight: "280px",
                     position: i === 0 ? "relative" : "absolute",
                     top: 0, left: 0, width: "100%",
                     opacity,
-                    transform: `scale(${0.96 + opacity * 0.04})`,
+                    transform: getCardTransform(i),
                     pointerEvents: opacity > 0.5 ? "auto" : "none",
                     willChange: "opacity, transform",
                   }}
                 >
-                  <Image
-                    src={slide.image}
-                    alt={slide.imageAlt}
-                    width={800}
-                    height={600}
-                    quality={85}
-                    priority={i === 0} // First one might be visible early
-                    // Using sizes to help browser pick right variant if user converts to raster
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                    draggable={false}
+                  <TiltCard
+                    className="glass-warm"
                     style={{
-                      width: "100%",
-                      height: "auto",
-                      borderRadius: "14px",
-                      display: "block",
+                      padding: "clamp(20px, 3vw, 32px)",
+                      minHeight: "280px",
                     }}
-                  />
-                </TiltCard>
+                  >
+                    <Image
+                      src={slide.image}
+                      alt={slide.imageAlt}
+                      width={800}
+                      height={600}
+                      quality={85}
+                      priority={i === 0} // First one might be visible early
+                      // Using sizes to help browser pick right variant if user converts to raster
+                      sizes="(max-width: 960px) 90vw, 50vw"
+                      draggable={false}
+                      style={{
+                        width: "100%",
+                        height: "auto",
+                        borderRadius: "14px",
+                        display: "block",
+                      }}
+                    />
+                  </TiltCard>
+                </div>
               )
             })}
           </div>
