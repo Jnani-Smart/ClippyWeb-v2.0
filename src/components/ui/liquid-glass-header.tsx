@@ -223,11 +223,12 @@ export function LiquidGlassHeader({
         const viewportWidth = window.innerWidth
         const menuWidth = Math.min(maxMenuWidth, viewportWidth - sideMargin * 2)
         const centeredLeft = (viewportWidth - menuWidth) / 2
-        const menuTop = rect.bottom + 10
+        const menuTop = window.scrollY + rect.bottom + 10
+        const menuLeft = window.scrollX + Math.max(sideMargin, centeredLeft)
 
         setMobileMenuPos({
             top: menuTop,
-            left: Math.max(sideMargin, centeredLeft),
+            left: menuLeft,
             width: menuWidth,
         })
     }, [])
@@ -253,6 +254,11 @@ export function LiquidGlassHeader({
             window.removeEventListener("scroll", update)
         }
     }, [mobileOpen, updateMobileMenuPosition, applyMaps])
+
+    const toggleMobileMenu = useCallback(() => {
+        if (!mobileOpen) updateMobileMenuPosition()
+        setMobileOpen((prev) => !prev)
+    }, [mobileOpen, updateMobileMenuPosition])
 
     // Smooth-scroll nav links with centering and prevent default anchor jump
     const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href?: string) => {
@@ -447,7 +453,7 @@ export function LiquidGlassHeader({
                 </div>
 
                 {/* ══ HAMBURGER (mobile) ══ */}
-                <button ref={hamburgerRef} className="header-hamburger" onClick={() => setMobileOpen(!mobileOpen)} aria-label={mobileOpen ? "Close navigation menu" : "Open navigation menu"} style={{
+                <button ref={hamburgerRef} className="header-hamburger" onClick={toggleMobileMenu} aria-label={mobileOpen ? "Close navigation menu" : "Open navigation menu"} style={{
                     ...pillStyle(scrolled),
                     width: `${GLASS.height}px`, display: "none", alignItems: "center", justifyContent: "center",
                     opacity: ready ? 1 : 0, pointerEvents: "auto", border: "none", cursor: "pointer", padding: 0,
@@ -476,7 +482,7 @@ export function LiquidGlassHeader({
             {/* ══ MOBILE NAV DROPDOWN ══ */}
             {mobileOpen && (
                 <div ref={mobileMenuRef} style={{
-                    position: "fixed",
+                    position: "absolute",
                     top: mobileMenuPos ? `${mobileMenuPos.top}px` : `${12 + GLASS.height + 10}px`,
                     left: mobileMenuPos ? `${mobileMenuPos.left}px` : "max(12px, env(safe-area-inset-left, 12px))",
                     width: mobileMenuPos ? `${mobileMenuPos.width}px` : "calc(100vw - 24px)",
