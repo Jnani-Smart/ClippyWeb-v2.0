@@ -62,6 +62,15 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+
+  async rewrites() {
+    return [
+      {
+        source: "/download/Clippy.app.zip",
+        destination: "https://github.com/Jnani-Smart/Clippy/releases/download/v1.9.0/Clippy.app.zip",
+      },
+    ];
+  },
 };
 
 export default nextConfig;

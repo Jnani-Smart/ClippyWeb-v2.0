@@ -479,12 +479,7 @@ function MorphingDownloadButton({ href, className = "", style = {}, iconSize = 1
       setStatus("success")
 
       // Trigger download
-      const link = document.createElement('a');
-      link.href = href;
-      link.download = '';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      window.location.assign(href);
 
       // Reset after delay
       setTimeout(() => {
@@ -652,7 +647,7 @@ function HeroSection() {
         transform: visible ? "translateY(0)" : "translateY(24px)",
         transition: "opacity 1.0s cubic-bezier(0.33, 1, 0.68, 1) 0.5s, transform 1.2s cubic-bezier(0.33, 1, 0.68, 1) 0.5s",
       }}>
-        <MorphingDownloadButton href="https://github.com/Jnani-Smart/Clippy/releases/download/v1.9.0/Clippy.app.zip" className="btn-dark" iconSize={18} />
+        <MorphingDownloadButton href="/download/Clippy.app.zip" className="btn-dark" iconSize={18} />
         <AnimatedButton href="https://github.com/Jnani-Smart/Clippy" target="_blank" rel="noopener noreferrer" className="btn-frosted">
           {I.github(18)}
           View on GitHub
@@ -1322,10 +1317,10 @@ function DownloadSection() {
         transition: "opacity 1.0s cubic-bezier(0.33, 1, 0.68, 1) 0.1s, transform 1.3s cubic-bezier(0.33, 1, 0.68, 1) 0.1s",
       }}>
         <MorphingDownloadButton
-          href="https://github.com/Jnani-Smart/Clippy/releases/download/v1.9.0/Clippy.app.zip"
+          href="/download/Clippy.app.zip"
           className="btn-dark"
-          style={{ padding: "clamp(16px, 3vw, 22px) clamp(32px, 6vw, 48px)", fontSize: "clamp(16px, 2vw, 18px)" }}
-          iconSize={20}
+          style={{ padding: "clamp(20px, 4vw, 26px) clamp(48px, 10vw, 80px)", fontSize: "clamp(18px, 2.5vw, 22px)" }}
+          iconSize={24}
         />
       </div>
     </section>

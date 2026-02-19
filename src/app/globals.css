@@ -167,7 +167,7 @@ body {
 }
 
 .btn-dark:hover {
-  background: var(--btn-dark-hover);
+  /* background: var(--btn-dark-hover); removed */
   transform: translateY(-2px) scale(1.02);
   box-shadow:
     0 4px 8px rgba(28, 28, 30, 0.20),
