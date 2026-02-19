@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 
 const STATIC_FILE_EXT = /\.[^/]+$/;
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const host = (request.headers.get("host") || "")
     .toLowerCase()
@@ -44,3 +44,4 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: "/:path*",
 };
+

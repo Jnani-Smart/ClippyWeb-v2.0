@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState, useCallback, useMemo } from "react"
+import { useEffect, useRef, useState, useCallback } from "react"
 
 interface NavSection {
     label: string
@@ -305,8 +305,13 @@ export function LiquidGlassHeader({
                             transition: "transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.65s ease",
                         }}>
                         {logoSrc ? (
-                            <img src={logoSrc} alt={`${title} logo`} draggable={false}
-                                style={{ width: "44px", height: "44px", objectFit: "contain", filter: "drop-shadow(0 2px 8px rgba(28,28,30,0.2))" }} />
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                                src={logoSrc}
+                                alt={`${title} logo`}
+                                draggable={false}
+                                style={{ width: "44px", height: "44px", objectFit: "contain", filter: "drop-shadow(0 2px 8px rgba(28,28,30,0.2))" }}
+                            />
                         ) : (
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(60,60,60,0.7)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />

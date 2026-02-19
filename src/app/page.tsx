@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react"
 import { LiquidGlassHeader } from "@/components/ui/liquid-glass-header"
 import Image from "next/image"
-// @ts-ignore
 import { TextMorph } from 'torph/react';
 
 /* ═══════════════════════════════════════════════════════════════
@@ -162,8 +161,8 @@ const I = {
    INTERSECTION OBSERVER — scroll-driven animations
    ═══════════════════════════════════════════════════════════════ */
 
-function useInView(threshold = 0.2) {
-  const ref = useRef<HTMLElement>(null)
+function useInView<T extends HTMLElement = HTMLElement>(threshold = 0.2) {
+  const ref = useRef<T>(null)
   const [visible, setVisible] = useState(false)
   useEffect(() => {
     const el = ref.current
@@ -175,7 +174,7 @@ function useInView(threshold = 0.2) {
     obs.observe(el)
     return () => obs.disconnect()
   }, [threshold])
-  return { ref: ref as React.RefObject<any>, visible }
+  return { ref, visible }
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -339,7 +338,7 @@ function IconDrawWrapper({ children, delay = 0 }: { children: React.ReactNode, d
 
     // Use requestIdleCallback if available, otherwise setTimeout
     if ('requestIdleCallback' in window) {
-      (window as any).requestIdleCallback(() => setupStrokes())
+      window.requestIdleCallback?.(() => setupStrokes())
     } else {
       setTimeout(setupStrokes, 100)
     }
@@ -424,38 +423,6 @@ function TiltCard({ children, className = "", style = {} }: { children: React.Re
       {children}
     </div>
   )
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   ANIMATED COUNTER
-   ═══════════════════════════════════════════════════════════════ */
-
-function Counter({ end, suffix = "", duration = 2000 }: { end: number, suffix?: string, duration?: number }) {
-  const [count, setCount] = useState(0)
-  const ref = useRef<HTMLSpanElement>(null)
-  const started = useRef(false)
-
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const obs = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting && !started.current) {
-        started.current = true
-        const start = performance.now()
-        const animate = (now: number) => {
-          const progress = Math.min((now - start) / duration, 1)
-          const eased = 1 - Math.pow(1 - progress, 4) // ease-out quart
-          setCount(Math.round(eased * end))
-          if (progress < 1) requestAnimationFrame(animate)
-        }
-        requestAnimationFrame(animate)
-      }
-    }, { threshold: 0.5 })
-    obs.observe(el)
-    return () => obs.disconnect()
-  }, [end, duration])
-
-  return <span ref={ref}>{count}{suffix}</span>
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -620,9 +587,9 @@ function HeroSection() {
         transform: visible ? "translateY(0)" : "translateY(40px)",
         transition: "opacity 1.2s cubic-bezier(0.33, 1, 0.68, 1) 0.1s, transform 1.4s cubic-bezier(0.33, 1, 0.68, 1) 0.1s",
       }}>
-        Your clipboard,{" "}
+        Your Clipboard,{" "}
         <br />
-        <AnimatedHighlight className="" delay={200}>reimagined</AnimatedHighlight>
+        <AnimatedHighlight className="" delay={200}>Reimagined</AnimatedHighlight>
       </h1>
 
       {/* Subtitle */}
@@ -760,18 +727,8 @@ function FeaturesSection() {
 
 /* Morph-aware highlight — forces animation restart via key remount */
 function MorphHighlight({ children, active }: { children: React.ReactNode, active: boolean }) {
-  const [animKey, setAnimKey] = useState(0)
-  const wasActive = useRef(false)
-
-  useEffect(() => {
-    if (active && !wasActive.current) {
-      setAnimKey(k => k + 1)
-    }
-    wasActive.current = active
-  }, [active])
-
   return (
-    <span key={animKey} className={`highlight-pink ${active ? "animate-in" : ""}`}>
+    <span className={`highlight-pink ${active ? "animate-in" : ""}`}>
       {children}
     </span>
   )
@@ -956,7 +913,7 @@ function ShowcaseSection() {
     window.addEventListener("scroll", onScroll, { passive: true })
     onScroll()
     return () => window.removeEventListener("scroll", onScroll)
-  }, [])
+  }, [stickyActive])
 
   const activeIndex = Math.min(totalSlides - 1, Math.floor(progress * totalSlides))
 
@@ -1218,7 +1175,7 @@ function TestimonialsSection() {
   )
 
   return (
-    <section id="testimonials" ref={ref} className="section" style={{ overflow: "hidden", paddingLeft: 0, paddingRight: 0 }}>
+    <section id="testimonials" ref={ref} className="section" style={{ overflowX: "hidden", overflowY: "visible", paddingLeft: 0, paddingRight: 0 }}>
       <div style={{
         textAlign: "center", marginBottom: "clamp(40px, 6vw, 64px)",
         padding: "0 clamp(16px, 4vw, 32px)",
@@ -1234,15 +1191,18 @@ function TestimonialsSection() {
       <div style={{
         position: "relative",
         width: "100%",
-        maskImage: "linear-gradient(to right, transparent, black 15%, black 85%, transparent)",
-        WebkitMaskImage: "linear-gradient(to right, transparent, black 15%, black 85%, transparent)",
+        overflow: "hidden",
+        padding: "0 clamp(14px, 3vw, 28px)",
+        boxSizing: "border-box",
+        maskImage: "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
+        WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
       }}>
         <div className="marquee-track" style={{
           display: "flex",
           gap: "clamp(16px, 2vw, 24px)",
           width: "max-content",
           animation: "scroll 40s linear infinite",
-          padding: "20px 0",
+          padding: "28px 0",
           alignItems: "stretch",
         }}
           onMouseEnter={(e) => e.currentTarget.style.animationPlayState = "paused"}

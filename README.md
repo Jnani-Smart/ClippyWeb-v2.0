@@ -1,32 +1,66 @@
-# Clippy Web v2.0
+# Clippy Web
 
-A premium, interactive web application for Clippy — the lightweight clipboard manager for macOS.
+Production website for Clippy, a macOS clipboard manager.
 
-## Features
+## Stack
 
-- **Liquid Glass Header** — Adaptive, high-fidelity header with custom SVG displacement filters.
-- **Micro-Animations** — Buttery smooth interactions and scroll-triggered transitions.
-- **Dynamic Downloads** — Intelligent server-side proxy for the latest app releases.
-- **Responsive** — Optimized for all devices with a mobile-first philosophy.
+- Next.js 16 (App Router)
+- React 19 + TypeScript
+- GSAP (UI motion)
+- Tailwind CSS 4 (global utility imports)
+- Vercel Analytics + Speed Insights
 
-## Tech Stack
+## Project Structure
 
-- **Next.js 15** — Modern React framework
-- **TypeScript** — Strict type safety
-- **GSAP** — High-performance animation engine
-- **Tailwind CSS 4** — Next-generation styling
-- **SVG Filters** — Custom chromatic aberration and glass distortion
-- **Framer Motion** — Fluid layout animations
+```text
+src/
+  app/
+    layout.tsx               # Global metadata, JSON-LD, fonts, app shell
+    page.tsx                 # Landing page sections and interactive UI
+    globals.css              # Design system + responsive rules
+    download/latest/route.ts # Latest release download proxy
+    robots.ts                # Robots policy
+    sitemap.ts               # Sitemap entries
+    manifest.ts              # Web app manifest
+    opengraph-image.tsx      # Dynamic OG image
+    twitter-image.tsx        # Dynamic Twitter image
+  components/ui/
+    liquid-glass-header.tsx  # Header/nav and mobile menu
+  proxy.ts                   # Domain canonicalization + cache/index headers
+```
 
-## Getting Started
+## Scripts
+
+```bash
+npm run dev
+npm run build
+npm run start
+npm run lint
+```
+
+## Domains and SEO
+
+- Canonical domain: `https://www.clippyapp.live`
+- Apex domain `https://clippyapp.live` is permanently redirected to `www`
+- `*.vercel.app` responses are marked `noindex` via `X-Robots-Tag`
+- Canonical, Open Graph, Twitter, JSON-LD, sitemap, robots, and manifest are configured
+
+## Caching Behavior
+
+- HTML/doc requests are sent with no-store/no-cache headers via `src/proxy.ts`
+- Static assets remain cacheable/immutable
+- Service workers are unregistered at load to avoid stale old-site shells
+
+## Local Development
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open `http://localhost:3000`.
 
-## Author
+## Notes
 
-**Jnani Smart** — [@Jnani-Smart](https://github.com/Jnani-Smart)
+- Build may fail in restricted/offline environments because `next/font/google` needs network access to fetch Geist.
+- `public/*.svg` files are intentionally ignored (local-only large assets).

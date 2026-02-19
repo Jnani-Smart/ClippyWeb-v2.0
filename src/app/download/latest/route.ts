@@ -1,6 +1,16 @@
 
 import { NextResponse } from 'next/server';
 
+interface GitHubReleaseAsset {
+    name: string;
+    browser_download_url: string;
+}
+
+interface GitHubRelease {
+    tag_name?: string;
+    assets?: GitHubReleaseAsset[];
+}
+
 export async function GET() {
     try {
         // 1. Fetch latest release info from GitHub API
@@ -18,13 +28,13 @@ export async function GET() {
             return new NextResponse('Failed to fetch latest release info', { status: 502 });
         }
 
-        const releaseData = await releaseRes.json();
+        const releaseData = (await releaseRes.json()) as GitHubRelease;
         const assets = releaseData.assets || [];
 
         // 2. Prioritize .dmg over .zip
-        let asset = assets.find((a: any) => a.name.endsWith('.dmg'));
+        let asset = assets.find((a) => a.name.endsWith('.dmg'));
         if (!asset) {
-            asset = assets.find((a: any) => a.name.endsWith('.zip'));
+            asset = assets.find((a) => a.name.endsWith('.zip'));
         }
 
         if (!asset) {
