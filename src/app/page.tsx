@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react"
 import { LiquidGlassHeader } from "@/components/ui/liquid-glass-header"
 import Image from "next/image"
+// @ts-ignore
+import { TextMorph } from 'torph/react';
 
 /* ═══════════════════════════════════════════════════════════════
    GITHUB VERSION HOOK — fetches latest release tag
@@ -457,6 +459,143 @@ function Counter({ end, suffix = "", duration = 2000 }: { end: number, suffix?: 
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   MORPHING DOWNLOAD BUTTON — Uses torph for text transitions
+   ═══════════════════════════════════════════════════════════════ */
+
+function MorphingDownloadButton({ href, className = "", style = {}, iconSize = 18 }: { href: string, className?: string, style?: React.CSSProperties, iconSize?: number }) {
+  const [status, setStatus] = useState<"idle" | "loading" | "success">("idle")
+  const [pressed, setPressed] = useState(false)
+  const [hovered, setHovered] = useState(false)
+  const pressStart = useRef<number>(0)
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    if (status !== "idle") return
+
+    setStatus("loading")
+
+    // Simulate download preparation
+    setTimeout(() => {
+      setStatus("success")
+
+      // Trigger download
+      const link = document.createElement('a');
+      link.href = href;
+      link.download = '';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Reset after delay
+      setTimeout(() => {
+        setStatus("idle")
+      }, 2000)
+    }, 800)
+  }
+
+  return (
+    <button
+      className={className}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => { setHovered(false); setPressed(false) }}
+      onPointerDown={() => {
+        setPressed(true)
+        pressStart.current = Date.now()
+      }}
+      onPointerUp={() => {
+        const duration = Date.now() - pressStart.current
+        if (duration < 150) {
+          setTimeout(() => setPressed(false), 150 - duration)
+        } else {
+          setPressed(false)
+        }
+      }}
+      onPointerCancel={() => setPressed(false)}
+      onClick={handleClick}
+      style={{
+        ...style,
+        transform: pressed ? "scale(0.95)" : (hovered ? "translateY(-2px) scale(1.02)" : "translateY(0) scale(1)"),
+        transition: "transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s cubic-bezier(0.16, 1, 0.3, 1), min-width 0.6s cubic-bezier(0.41, 1.03, 0.6, 1.03), width 0.6s cubic-bezier(0.41, 1.03, 0.6, 1.03)", // Updated transition
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "10px",
+        cursor: status === "idle" ? "pointer" : "default",
+        padding: "14px 28px", // Ensure consistent padding 
+        // Let width conform to content but potentially animate if possible or just use the smooth text morph
+        width: "auto",
+        height: "auto",
+      }}
+    >
+      <div style={{ width: iconSize, height: iconSize, position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        {status === "idle" && (
+          <div style={{ position: "absolute", inset: 0, animation: "fadeIn 0.2s ease" }}>
+            {I.apple(iconSize)}
+          </div>
+        )}
+
+        {status === "loading" && (
+          <svg className="animate-spin" width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ position: "absolute", inset: 0 }}>
+            <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+          </svg>
+        )}
+
+        {status === "success" && (
+          <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ position: "absolute", inset: 0, animation: "scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)" }}>
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        )}
+      </div>
+
+      <TextMorph>
+        {status === "idle" ? "Download for Mac" : (status === "loading" ? "Downloading..." : "Downloaded")}
+      </TextMorph>
+    </button>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ANIMATED BUTTON — Clicking animation from navpill
+   ═══════════════════════════════════════════════════════════════ */
+
+function AnimatedButton({ href, className = "", children, style = {}, target, rel }: { href: string, className?: string, children: React.ReactNode, style?: React.CSSProperties, target?: string, rel?: string }) {
+  const [pressed, setPressed] = useState(false)
+  const [hovered, setHovered] = useState(false)
+  const pressStart = useRef<number>(0)
+
+  return (
+    <a
+      href={href}
+      className={className}
+      target={target}
+      rel={rel}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => { setHovered(false); setPressed(false) }}
+      onPointerDown={() => {
+        setPressed(true)
+        pressStart.current = Date.now()
+      }}
+      onPointerUp={() => {
+        const duration = Date.now() - pressStart.current
+        if (duration < 150) {
+          setTimeout(() => setPressed(false), 150 - duration)
+        } else {
+          setPressed(false)
+        }
+      }}
+      onPointerCancel={() => setPressed(false)}
+      style={{
+        ...style,
+        transform: pressed ? "scale(0.95)" : (hovered ? "translateY(-2px) scale(1.02)" : "translateY(0) scale(1)"),
+        transition: "transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
+      }}
+    >
+      {children}
+    </a>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════════════
    1 · HERO
    ═══════════════════════════════════════════════════════════════ */
 
@@ -501,7 +640,7 @@ function HeroSection() {
         padding: "0 clamp(0px, 2vw, 12px)",
       }}>
         A lightweight, elegant clipboard manager for{" "}
-        <span style={{ display: "inline-flex", alignItems: "baseline", gap: "3px" }}><span style={{ display: "inline-block", verticalAlign: "-0.1em" }}>{I.apple(16)}</span> macOS</span>.
+        <span style={{ display: "inline-flex", alignItems: "baseline", gap: "3px" }}><span style={{ display: "inline-block", transform: "translateY(1.5px)" }}>{I.apple(16)}</span> macOS</span>.
         Access your clipboard history instantly with{" "}
         <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>⌘⇧V</span>.
       </p>
@@ -513,19 +652,15 @@ function HeroSection() {
         transform: visible ? "translateY(0)" : "translateY(24px)",
         transition: "opacity 1.0s cubic-bezier(0.33, 1, 0.68, 1) 0.5s, transform 1.2s cubic-bezier(0.33, 1, 0.68, 1) 0.5s",
       }}>
-        <a href="https://github.com/Jnani-Smart/Clippy/releases/download/v1.9.0/Clippy.app.zip" className="btn-dark">
-          {I.apple(18)}
-          Download for Mac
-        </a>
-        <a href="https://github.com/Jnani-Smart/Clippy" target="_blank" rel="noopener noreferrer" className="btn-frosted">
+        <MorphingDownloadButton href="https://github.com/Jnani-Smart/Clippy/releases/download/v1.9.0/Clippy.app.zip" className="btn-dark" iconSize={18} />
+        <AnimatedButton href="https://github.com/Jnani-Smart/Clippy" target="_blank" rel="noopener noreferrer" className="btn-frosted">
           {I.github(18)}
           View on GitHub
-        </a>
+        </AnimatedButton>
       </div>
 
       {/* PRODUCT MOCKUP — Large app screenshot */}
       <div
-        className="mockup-float-container"
         style={{
           marginTop: "clamp(40px, 6vw, 72px)", width: "100%", maxWidth: "960px",
           padding: "0 clamp(0px, 2vw, 16px)",
@@ -534,24 +669,24 @@ function HeroSection() {
           transition: "opacity 1.2s cubic-bezier(0.33, 1, 0.68, 1) 0.7s, transform 1.6s cubic-bezier(0.33, 1, 0.68, 1) 0.7s",
         }}
       >
-        <Image
-          src="/silver.png"
-          alt="Clippy App — macOS clipboard manager with search, pin, and preview"
-          width={960}
-          height={600}
-          priority
-          quality={90}
-          placeholder="blur"
-          blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAJUlEQVR4nGP8//8/MjIyMn////8/Pz//Pz8/Pz8/Pz//Pz8/Pz8AMgwH+dX+1ekAAAAASUVORK5CYII="
-          style={{
-            width: "100%",
-            height: "auto",
-            display: "block",
-            filter: "drop-shadow(0 40px 80px rgba(0,0,0,0.12))",
-            transition: "transform 0.5s ease-out",
-          }}
-          className="hover:translate-y-[-12px] transition-transform duration-500 ease-out"
-        />
+        <div className="mockup-float-wrapper">
+          <Image
+            src="/silver.png"
+            alt="Clippy App — macOS clipboard manager with search, pin, and preview"
+            width={960}
+            height={600}
+            priority
+            quality={90}
+            placeholder="blur"
+            blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAJUlEQVR4nGP8//8/MjIyMn////8/Pz//Pz8/Pz8/Pz//Pz8/Pz8AMgwH+dX+1ekAAAAASUVORK5CYII="
+            style={{
+              width: "100%",
+              height: "auto",
+              display: "block",
+              filter: "drop-shadow(0 40px 80px rgba(0,0,0,0.12))",
+            }}
+          />
+        </div>
       </div>
     </section>
   )
@@ -1186,10 +1321,12 @@ function DownloadSection() {
         transform: visible ? "translateY(0) scale(1)" : "translateY(24px) scale(0.97)",
         transition: "opacity 1.0s cubic-bezier(0.33, 1, 0.68, 1) 0.1s, transform 1.3s cubic-bezier(0.33, 1, 0.68, 1) 0.1s",
       }}>
-        <a href="https://github.com/Jnani-Smart/Clippy/releases/download/v1.9.0/Clippy.app.zip" className="btn-dark" style={{ padding: "clamp(16px, 3vw, 22px) clamp(32px, 6vw, 48px)", fontSize: "clamp(16px, 2vw, 18px)" }}>
-          {I.apple(20)}
-          Download for Mac
-        </a>
+        <MorphingDownloadButton
+          href="https://github.com/Jnani-Smart/Clippy/releases/download/v1.9.0/Clippy.app.zip"
+          className="btn-dark"
+          style={{ padding: "clamp(16px, 3vw, 22px) clamp(32px, 6vw, 48px)", fontSize: "clamp(16px, 2vw, 18px)" }}
+          iconSize={20}
+        />
       </div>
     </section>
   )
@@ -1258,7 +1395,7 @@ export default function Home() {
           { label: "Features", href: "#features" },
           { label: "Gallery", href: "#gallery" },
           { label: "Testimonials", href: "#testimonials" },
-          { label: "Download", href: "#download" },
+          { label: "Get App", href: "#download" },
         ]}
       />
 

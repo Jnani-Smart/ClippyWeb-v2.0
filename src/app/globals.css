@@ -271,9 +271,11 @@ body {
     transform: scaleX(0);
     opacity: 0;
   }
+
   8% {
     opacity: 0.7;
   }
+
   100% {
     transform: scaleX(1);
     opacity: 0.7;
@@ -281,8 +283,17 @@ body {
 }
 
 @keyframes gentlePulse {
-  0%, 100% { transform: scale(1); opacity: 0.85; }
-  50% { transform: scale(1.08); opacity: 1; }
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
 }
 
 /* Pink underline highlight — sweeps left-to-right on scroll */
@@ -487,7 +498,7 @@ body {
 }
 
 .feature-icon:hover {
-  transform: scale(1.15) rotate(-5deg);
+  /* transform removed */
 }
 
 .feature-icon:hover::before {
@@ -507,6 +518,15 @@ body {
 /* ═══════════════════════════════════════════════════════════════════
    MOCKUP CONTAINER — Large product screenshot area
    ═══════════════════════════════════════════════════════════════════ */
+
+.mockup-float-wrapper {
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform;
+}
+
+.mockup-float-wrapper:hover {
+  transform: translateY(-12px);
+}
 
 .mockup-container {
   width: 100%;
@@ -984,6 +1004,7 @@ body {
   .search-category-wrapper {
     gap: 8px;
   }
+
   .search-category-wrapper .category-pill {
     padding: 5px 10px;
     font-size: 11px;
@@ -1035,10 +1056,12 @@ body {
   .showcase-grid--reversed {
     direction: ltr;
   }
-  .showcase-grid--reversed > *:first-child {
+
+  .showcase-grid--reversed>*:first-child {
     order: 2;
   }
-  .showcase-grid--reversed > *:last-child {
+
+  .showcase-grid--reversed>*:last-child {
     order: 1;
   }
 
@@ -1169,6 +1192,7 @@ body {
    ═══════════════════════════════════════════════════════════════════ */
 
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
@@ -1194,6 +1218,7 @@ body {
    ═══════════════════════════════════════════════════════════════════ */
 
 @media (hover: none) and (pointer: coarse) {
+
   /* Disable tilt/hover effects that don't work on touch */
   .glass-warm:hover {
     transform: none;
@@ -1250,8 +1275,13 @@ body {
    ═══════════════════════════════════════════════════════════════════ */
 
 @keyframes scroll {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(calc(-100% / 3)); }
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(calc(-100% / 3));
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -1275,5 +1305,80 @@ body {
   .marquee-track {
     animation: none !important;
     flex-wrap: wrap;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   POPOVER MENU (iOS Morphing Effect)
+   Uses: [popover] API + CSS Anchor Positioning + allow-discrete transitions
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* 1. Define the anchor on the trigger element */
+.header-hamburger {
+  anchor-name: --mobile-menu-trigger;
+}
+
+/* 2. Style the popover element */
+.mobile-menu-popover {
+  /* Reset defaults */
+  position: absolute;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  overflow: visible;
+
+  /* Position relative to the anchor */
+  position-anchor: --mobile-menu-trigger;
+  top: anchor(bottom, 12px);
+  /* 12px below trigger */
+  right: anchor(right, 0px);
+  /* Align right edge with trigger */
+  width: max-content;
+  min-width: 200px;
+
+  /* Animation state: Closed */
+  opacity: 0;
+  transform: scale(0.9) translateY(-10px);
+  transform-origin: top right;
+
+  /* Enable discrete property transitions (display/overlay) */
+  transition:
+    opacity 0.35s cubic-bezier(0.32, 0.72, 0, 1),
+    transform 0.35s cubic-bezier(0.32, 0.72, 0, 1),
+    display 0.35s allow-discrete,
+    overlay 0.35s allow-discrete;
+}
+
+/* 3. Open state */
+.mobile-menu-popover:popover-open {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+
+/* 4. Starting style for ENTRY animation (closed -> open) */
+@starting-style {
+  .mobile-menu-popover:popover-open {
+    opacity: 0;
+    transform: scale(0.9) translateY(-10px);
+  }
+}
+
+/* 5. Backdrop (Overlay) styling */
+.mobile-menu-popover::backdrop {
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  opacity: 0;
+  transition: opacity 0.35s ease, display 0.35s allow-discrete, overlay 0.35s allow-discrete;
+}
+
+.mobile-menu-popover:popover-open::backdrop {
+  opacity: 1;
+}
+
+@starting-style {
+  .mobile-menu-popover:popover-open::backdrop {
+    opacity: 0;
   }
 }

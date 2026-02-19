@@ -18,7 +18,7 @@ const DEFAULT_SECTIONS: NavSection[] = [
     { label: "Features", href: "#features" },
     { label: "Gallery", href: "#gallery" },
     { label: "Testimonials", href: "#testimonials" },
-    { label: "Download", href: "#download" },
+    { label: "Get App", href: "#download" },
 ]
 
 const GLASS = {
@@ -254,7 +254,7 @@ export function LiquidGlassHeader({
                     </div>
 
                     {/* ── TITLE + BADGE PILL ── */}
-                    <div ref={leftRef}                        className="header-title-pill"                        onPointerDown={() => { setPressed("title"); pressStart.current = Date.now() }}
+                    <div ref={leftRef} className="header-title-pill" onPointerDown={() => { setPressed("title"); pressStart.current = Date.now() }}
                         onPointerUp={() => {
                             const duration = Date.now() - pressStart.current
                             if (duration < 150) setTimeout(() => setPressed(null), 150 - duration)
@@ -291,13 +291,14 @@ export function LiquidGlassHeader({
                 <div ref={rightRef} className="header-nav-desktop" style={{
                     ...pillStyle(scrolled),
                     display: "flex", alignItems: "center", padding: "0 8px",
-                    opacity: 0, pointerEvents: "auto", flexShrink: 0,
+                    opacity: ready ? 1 : 0, pointerEvents: "auto", flexShrink: 0,
                     backdropFilter: `url(#hdr-r) brightness(1.12) saturate(${c.saturation})`,
                     WebkitBackdropFilter: `url(#hdr-r) brightness(1.12) saturate(${c.saturation})`,
+                    transition: "transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.65s ease",
                 }}>
                     <nav ref={navRef} style={{
                         display: "flex", alignItems: "center", gap: "2px",
-                        opacity: ready ? 1 : 0, transition: "opacity 0.4s ease-out",
+                        opacity: 1, transition: "opacity 0.4s ease-out",
                         position: "relative",
                     }}
                         onMouseLeave={() => { setHovered(null); setHighlight(null) }}
@@ -319,7 +320,7 @@ export function LiquidGlassHeader({
                             zIndex: 0,
                         }} />
                         {sections.map((s, i) => {
-                            const isDownload = s.label === "Download";
+                            const isDownload = s.label === "Get App";
                             return (
                                 <a key={i} href={s.href || "#"}
                                     onClick={(e) => handleNavClick(e, s.href)}
