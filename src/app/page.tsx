@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react"
 import { LiquidGlassHeader } from "@/components/ui/liquid-glass-header"
+import Image from "next/image"
 
 /* ═══════════════════════════════════════════════════════════════
    GITHUB VERSION HOOK — fetches latest release tag
@@ -293,34 +294,30 @@ function IconDrawWrapper({ children, delay = 0 }: { children: React.ReactNode, d
     const el = ref.current
     if (!el) return
 
-    const svgEl = el.querySelector("svg")
-    if (!svgEl) return
+    // Defer heavy DOM measurements
+    const setupStrokes = () => {
+      const svgEl = el.querySelector("svg")
+      if (!svgEl) return
 
-    // Get all stroke-able SVG elements
-    const strokes = svgEl.querySelectorAll("path, polyline, line, rect, circle, polygon")
+      const strokes = svgEl.querySelectorAll("path, polyline, line, rect, circle, polygon")
+      strokes.forEach((s) => {
+        const stroke = s as SVGGeometryElement
+        try {
+          const len = stroke.getTotalLength()
+          stroke.style.strokeDasharray = `${len}`
+          stroke.style.strokeDashoffset = `${len}`
+          stroke.style.opacity = "0"
+        } catch {
+          stroke.style.strokeDasharray = "100"
+          stroke.style.strokeDashoffset = "100"
+          stroke.style.opacity = "0"
+        }
+      })
 
-    // Setup: measure each path and hide it
-    strokes.forEach((s) => {
-      const stroke = s as SVGGeometryElement
-      try {
-        const len = stroke.getTotalLength()
-        stroke.style.strokeDasharray = `${len}`
-        stroke.style.strokeDashoffset = `${len}`
-        stroke.style.opacity = "0"
-      } catch {
-        // Some elements (e.g. zero-length lines) don't support getTotalLength
-        stroke.style.strokeDasharray = "100"
-        stroke.style.strokeDashoffset = "100"
-        stroke.style.opacity = "0"
-      }
-    })
-
-    const obs = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) {
-        // Stagger: 120ms between strokes, with 200ms base delay for smooth cascade
-        const baseDelay = 200 + delay * 1000
-        setTimeout(() => {
-          requestAnimationFrame(() => {
+      const obs = new IntersectionObserver(([e]) => {
+        if (e.isIntersecting) {
+          const baseDelay = 200 + delay * 1000
+          setTimeout(() => {
             requestAnimationFrame(() => {
               strokes.forEach((s, i) => {
                 const stroke = s as SVGElement
@@ -330,13 +327,21 @@ function IconDrawWrapper({ children, delay = 0 }: { children: React.ReactNode, d
                 stroke.style.strokeDashoffset = "0"
               })
             })
-          })
-        }, baseDelay)
-        obs.disconnect()
-      }
-    }, { threshold: 0.25, rootMargin: "-20px 0px" })
-    obs.observe(el)
-    return () => obs.disconnect()
+          }, baseDelay)
+          obs.disconnect()
+        }
+      }, { threshold: 0.25, rootMargin: "-20px 0px" })
+      obs.observe(el)
+      return () => obs.disconnect()
+    }
+
+    // Use requestIdleCallback if available, otherwise setTimeout
+    if ('requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(() => setupStrokes())
+    } else {
+      setTimeout(setupStrokes, 100)
+    }
+
   }, [delay])
 
   return <div ref={ref}>{children}</div>
@@ -466,6 +471,7 @@ function HeroSection() {
       padding: "clamp(100px, 14vh, 160px) clamp(16px, 4vw, 32px) clamp(40px, 8vh, 80px)",
       textAlign: "center",
       position: "relative",
+      willChange: "opacity, transform"
     }}>
 
 
@@ -526,12 +532,15 @@ function HeroSection() {
           transition: "opacity 1.2s cubic-bezier(0.33, 1, 0.68, 1) 0.7s, transform 1.6s cubic-bezier(0.33, 1, 0.68, 1) 0.7s",
         }}
       >
-        <img
-          src="/silver.svg"
+        <Image
+          src="/silver.png"
           alt="Clippy App — macOS clipboard manager with search, pin, and preview"
-          loading="eager"
-          decoding="async"
-          fetchPriority="high"
+          width={960}
+          height={600}
+          priority
+          quality={90}
+          placeholder="blur"
+          blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAJUlEQVR4nGP8//8/MjIyMn////8/Pz//Pz8/Pz8/Pz//Pz8/Pz8AMgwH+dX+1ekAAAAASUVORK5CYII="
           style={{
             width: "100%",
             height: "auto",
@@ -539,8 +548,7 @@ function HeroSection() {
             filter: "drop-shadow(0 40px 80px rgba(0,0,0,0.12))",
             transition: "transform 0.5s ease-out",
           }}
-          onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-12px)"}
-          onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(0)"}
+          className="hover:translate-y-[-12px] transition-transform duration-500 ease-out"
         />
       </div>
     </section>
@@ -775,6 +783,7 @@ function SearchCategoryAnimation() {
   )
 }
 
+
 function ShowcaseSection() {
   const containerRef = useRef<HTMLDivElement>(null)
   const [progress, setProgress] = useState(0)
@@ -834,7 +843,7 @@ function ShowcaseSection() {
       return 1
     }
     return 0
-  }, [progress, segmentSize])
+  }, [progress, segmentSize, totalSlides]) // Added totalSlides to dependencies
 
   const getSlideTransform = useCallback((index: number) => {
     const opacity = getSlideOpacity(index)
@@ -855,7 +864,7 @@ function ShowcaseSection() {
       headline: (isActive: boolean) => <>Find anything, <MorphHighlight active={isActive}>instantly</MorphHighlight></>,
       body: "Search across your entire clipboard history in milliseconds. Filter by category — text, code, URLs, or images. See which app each item came from.",
       bottom: <SearchCategoryAnimation />,
-      image: "/search.svg",
+      image: "/search.png",
       imageAlt: "Search section preview",
     },
     {
@@ -871,7 +880,7 @@ function ShowcaseSection() {
           </div>
         </div>
       ),
-      image: "/pinned.svg",
+      image: "/pinned.png",
       imageAlt: "Organize section preview",
     },
     {
@@ -894,7 +903,7 @@ function ShowcaseSection() {
           ))}
         </div>
       ),
-      image: "/queue.svg",
+      image: "/queue.png",
       imageAlt: "Clippy Queue feature screenshot",
     },
   ], [])
@@ -969,11 +978,15 @@ function ShowcaseSection() {
                     willChange: "opacity, transform",
                   }}
                 >
-                  <img
+                  <Image
                     src={slide.image}
                     alt={slide.imageAlt}
-                    loading={i === 0 ? "eager" : "lazy"}
-                    decoding="async"
+                    width={800}
+                    height={600}
+                    quality={85}
+                    priority={i === 0} // First one might be visible early
+                    // Using sizes to help browser pick right variant if user converts to raster
+                    sizes="(max-width: 768px) 100vw, 50vw"
                     draggable={false}
                     style={{
                       width: "100%",
