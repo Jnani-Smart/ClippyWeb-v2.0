@@ -275,7 +275,7 @@ export function LiquidGlassHeader({
                         <span style={{
                             fontSize: "20px", fontWeight: 700, letterSpacing: "-0.02em",
                             color: "rgba(29,29,31,0.92)", lineHeight: 1, whiteSpace: "nowrap",
-                            fontFamily: '-apple-system, "SF Pro Display", "Helvetica Neue", sans-serif',
+                            fontFamily: '"SF Pro Display", "SF Pro Text", "SF Pro", -apple-system, BlinkMacSystemFont, sans-serif',
                         }}>{title}</span>
                         <span style={{
                             padding: "4px 10px", fontSize: "12px", fontWeight: 600,
@@ -359,7 +359,7 @@ export function LiquidGlassHeader({
                                     style={{
                                         fontSize: "15px", fontWeight: 600, letterSpacing: "-0.01em",
                                         color: isDownload ? "#ffffff" : (hovered === i ? "rgba(29,29,31,0.95)" : "rgba(29,29,31,0.6)"),
-                                        fontFamily: '-apple-system, "SF Pro Display", "Helvetica Neue", sans-serif',
+                                        fontFamily: '"SF Pro Display", "SF Pro Text", "SF Pro", -apple-system, BlinkMacSystemFont, sans-serif',
                                         textDecoration: "none", padding: "14.5px 24px",
                                         borderRadius: "22px",
                                         background: isDownload ? "#1C1C1E" : "transparent",
@@ -423,7 +423,7 @@ export function LiquidGlassHeader({
                             <a key={i} href={s.href || "#"} onClick={(e) => handleNavClick(e, s.href)}
                                 style={{
                                     fontSize: "16px", fontWeight: 600, color: "rgba(29,29,31,0.8)",
-                                    fontFamily: '-apple-system, "SF Pro Display", "Helvetica Neue", sans-serif',
+                                    fontFamily: '"SF Pro Display", "SF Pro Text", "SF Pro", -apple-system, BlinkMacSystemFont, sans-serif',
                                     letterSpacing: "-0.01em",
                                     textDecoration: "none", padding: "12px 16px", borderRadius: "14px",
                                     transition: "background 0.2s ease", cursor: "pointer", lineHeight: 1,
